@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Match Now - 스포츠 매칭 관리 시스템</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.0/axios.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; color: #333; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .header { background: rgba(255, 255, 255, 0.95); border-radius: 20px; padding: 30px; margin-bottom: 30px; text-align: center; }
+        .header h1 { font-size: 3em; background: linear-gradient(45deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 10px; }
+        .nav-tabs { display: flex; background: rgba(255, 255, 255, 0.9); border-radius: 15px; padding: 5px; margin-bottom: 30px; }
+        .nav-tab { flex: 1; padding: 15px 20px; background: transparent; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; transition: all 0.3s ease; }
+        .nav-tab.active { background: linear-gradient(45deg, #667eea, #764ba2); color: white; }
+        .content-panel { display: none; background: rgba(255, 255, 255, 0.95); border-radius: 20px; padding: 30px; }
+        .content-panel.active { display: block; }
+        .controls { display: flex; gap: 15px; margin-bottom: 30px; flex-wrap: wrap; }
+        .form-group { display: flex; flex-direction: column; gap: 5px; }
+        .form-control { padding: 12px 16px; border: 2px solid #e1e8ed; border-radius: 10px; min-width: 200px; }
+        .btn { padding: 12px 24px; border: none; border-radius: 10px; cursor: pointer; font-weight: 600; margin: 5px; }
+        .btn-primary { background: linear-gradient(45deg, #667eea, #764ba2); color: white; }
+        .btn-success { background: linear-gradient(45deg, #4CAF50, #45a049); color: white; }
+        .btn-danger { background: linear-gradient(45deg, #ff6b6b, #ee5a52); color: white; }
+        .data-grid { display: grid; gap: 20px; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); }
+        .data-card { background: #f8f9fa; border-radius: 15px; padding: 25px; transition: all 0.3s ease; }
+        .data-card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
+        .loading { text-align: center; padding: 50px; color: #666; }
+        .error { background: #ff6b6b; color: white; padding: 20px; border-radius: 10px; margin: 20px 0; text-align: center; }
+        .success { background: #4CAF50; color: white; padding: 20px; border-radius: 10px; margin: 20px 0; text-align: center; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+        .stat-card { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 25px; border-radius: 15px; text-align: center; }
+        .stat-card h3 { font-size: 2.5em; margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>⚽ Match Now</h1>
+            <p>스포츠 매칭 관리 시스템</p>
+        </div>
+
+        <div class="nav-tabs">
+            <button class="nav-tab active" id="tab-dashboard">대시보드</button>
+            <button class="nav-tab" id="tab-countries">국가</button>
+            <button class="nav-tab" id="tab-sports">스포츠 카테고리</button>
+            <button class="nav-tab" id="tab-leagues">리그</button>
+            <button class="nav-tab" id="tab-teams">팀</button>
+            <button class="nav-tab" id="tab-players">선수</button>
+        </div>
+
+        <!-- 대시보드 패널 -->
+        <div id="dashboard" class="content-panel active">
+            <h2>📊 대시보드</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3 id="countriesCount">0</h3>
+                    <p>국가</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="sportsCount">0</h3>
+                    <p>스포츠 카테고리</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="leaguesCount">0</h3>
+                    <p>리그</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="teamsCount">0</h3>
+                    <p>팀</p>
+                </div>
+                <div class="stat-card">
+                    <h3 id="playersCount">0</h3>
+                    <p>선수</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- 국가 패널 -->
+        <div id="countries" class="content-panel">
+            <h2>🌍 국가 관리</h2>
+            <div class="controls">
+                <div class="form-group">
+                    <label>새 국가 추가</label>
+                    <input type="text" id="newCountryName" class="form-control" placeholder="국가명을 입력하세요">
+                </div>
+                <button class="btn btn-success" id="addCountryBtn">➕ 국가 추가</button>
+                <button class="btn btn-primary" id="refreshCountriesBtn">🔄 새로고침</button>
+            </div>
+            <div id="countriesData" class="data-grid"></div>
+        </div>
+
+        <!-- 스포츠 카테고리 패널 -->
+        <div id="sports" class="content-panel">
+            <h2>🏃 스포츠 카테고리 관리</h2>
+            <div class="controls">
+                <div class="form-group">
+                    <label>카테고리명 (한국어)</label>
+                    <input type="text" id="newSportsName" class="form-control" placeholder="예: 축구">
+                </div>
+                <div class="form-group">
+                    <label>카테고리명 (영어)</label>
+                    <input type="text" id="newSportsNameEn" class="form-control" placeholder="예: football">
+                </div>
+                <button class="btn btn-success" id="addSportsBtn">➕ 카테고리 추가</button>
+                <button class="btn btn-primary" id="refreshSportsBtn">🔄 새로고침</button>
+            </div>
+            <div id="sportsData" class="data-grid"></div>
+        </div>
+
+        <!-- 리그 패널 -->
+        <div id="leagues" class="content-panel">
+            <h2>🏆 리그 관리</h2>
+            <div class="controls">
+                <div class="form-group">
+                    <label>리그명</label>
+                    <input type="text" id="newLeagueName" class="form-control" placeholder="예: 프리미어 리그">
+                </div>
+                <div class="form-group">
+                    <label>리그 약칭</label>
+                    <input type="text" id="newLeagueNameShort" class="form-control" placeholder="예: EPL">
+                </div>
+                <div class="form-group">
+                    <label>국가</label>
+                    <select id="newLeagueCountry" class="form-control">
+                        <option value="">국가를 선택하세요</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>스포츠 카테고리</label>
+                    <select id="newLeagueSports" class="form-control">
+                        <option value="">스포츠를 선택하세요</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>설명</label>
+                    <input type="text" id="newLeagueDescription" class="form-control" placeholder="리그 설명">
+                </div>
+                <div class="form-group">
+                    <label>BATS ID</label>
+                    <input type="text" id="newLeagueBatsId" class="form-control" placeholder="예: 94">
+                </div>
+                <button class="btn btn-success" id="addLeagueBtn">➕ 리그 추가</button>
+                <button class="btn btn-primary" id="refreshLeaguesBtn">🔄 새로고침</button>
+            </div>
+            <div id="leaguesData" class="data-grid"></div>
+        </div>
+
+        <!-- 팀 패널 -->
+        <div id="teams" class="content-panel">
+            <h2>⚽ 팀 관리</h2>
+            <div class="controls">
+                <div class="form-group">
+                    <label>팀명</label>
+                    <input type="text" id="newTeamName" class="form-control" placeholder="예: 토트넘">
+                </div>
+                <div class="form-group">
+                    <label>팀 설명</label>
+                    <input type="text" id="newTeamDescription" class="form-control" placeholder="팀 설명">
+                </div>
+                <div class="form-group">
+                    <label>국가</label>
+                    <select id="newTeamCountry" class="form-control">
+                        <option value="">국가를 선택하세요</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>스포츠 카테고리</label>
+                    <select id="newTeamSports" class="form-control">
+                        <option value="">스포츠를 선택하세요</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>홈구장</label>
+                    <input type="text" id="newTeamStadium" class="form-control" placeholder="예: Tottenham Hotspur Stadium">
+                </div>
+                <div class="form-group">
+                    <label>BATS ID</label>
+                    <input type="text" id="newTeamBatsId" class="form-control" placeholder="예: 8910">
+                </div>
+                <button class="btn btn-success" id="addTeamBtn">➕ 팀 추가</button>
+                <button class="btn btn-primary" id="refreshTeamsBtn">🔄 새로고침</button>
+            </div>
+            <div id="teamsData" class="data-grid"></div>
+        </div>
+
+        <!-- 선수 패널 -->
+        <div id="players" class="content-panel">
+            <h2>🏃‍♂️ 선수 관리</h2>
+            <div class="controls">
+                <div class="form-group">
+                    <label>선수명 (한국어)</label>
+                    <input type="text" id="newPlayerName" class="form-control" placeholder="예: 손흥민">
+                </div>
+                <div class="form-group">
+                    <label>선수명 (영어)</label>
+                    <input type="text" id="newPlayerNameEn" class="form-control" placeholder="예: Son Heung-min">
+                </div>
+                <div class="form-group">
+                    <label>포지션</label>
+                    <input type="text" id="newPlayerPosition" class="form-control" placeholder="예: 공격수">
+                </div>
+                <button class="btn btn-success" id="addPlayerBtn">➕ 선수 추가</button>
+                <button class="btn btn-primary" id="refreshPlayersBtn">🔄 새로고침</button>
+            </div>
+            <div id="playersData" class="data-grid"></div>
+        </div>
+    </div>
+
+    <script>
+        // 전역 변수
+        const API_BASE = 'http://localhost/api/v1';
+        const api = axios.create({
+            baseURL: API_BASE,
+            timeout: 10000,
+            headers: { 'Content-Type': 'application/json' }
+        });
+
+        // 전역 데이터 저장소
+        let countriesData = [];
+        let sportsData = [];
+
+        // 국가와 스포츠 데이터 로드 (셀렉트박스용)
+        async function loadSelectOptions() {
+            try {
+                const [countriesRes, sportsRes] = await Promise.allSettled([
+                    api.get('/countries?limit=100'),
+                    api.get('/sports-categories?limit=100')
+                ]);
+
+                if (countriesRes.status === 'fulfilled') {
+                    countriesData = countriesRes.value.data.data.results || [];
+                }
+                if (sportsRes.status === 'fulfilled') {
+                    sportsData = sportsRes.value.data.data.results || [];
+                }
+
+                updateSelectOptions();
+            } catch (error) {
+                console.error('셀렉트 옵션 로드 실패:', error);
+            }
+        }
+
+        function updateSelectOptions() {
+            // 리그 셀렉트박스 업데이트
+            const leagueCountrySelect = document.getElementById('newLeagueCountry');
+            const leagueSportsSelect = document.getElementById('newLeagueSports');
+            
+            if (leagueCountrySelect) {
+                leagueCountrySelect.innerHTML = '<option value="">국가를 선택하세요</option>' +
+                    countriesData.map(c => `<option value="${c._id}">${c.name}</option>`).join('');
+            }
+            
+            if (leagueSportsSelect) {
+                leagueSportsSelect.innerHTML = '<option value="">스포츠를 선택하세요</option>' +
+                    sportsData.map(s => `<option value="${s._id}">${s.name}</option>`).join('');
+            }
+
+            // 팀 셀렉트박스 업데이트
+            const teamCountrySelect = document.getElementById('newTeamCountry');
+            const teamSportsSelect = document.getElementById('newTeamSports');
+            
+            if (teamCountrySelect) {
+                teamCountrySelect.innerHTML = '<option value="">국가를 선택하세요</option>' +
+                    countriesData.map(c => `<option value="${c._id}">${c.name}</option>`).join('');
+            }
+            
+            if (teamSportsSelect) {
+                teamSportsSelect.innerHTML = '<option value="">스포츠를 선택하세요</option>' +
+                    sportsData.map(s => `<option value="${s._id}">${s.name}</option>`).join('');
+            }
+        }
+
+        // 메시지 함수
+        function showError(message) {
+            console.error('❌ 에러:', message);
+            const div = document.createElement('div');
+            div.className = 'error';
+            div.textContent = message;
+            document.body.appendChild(div);
+            setTimeout(() => div.remove(), 5000);
+        }
+
+        function showSuccess(message) {
+            console.log('✅ 성공:', message);
+            const div = document.createElement('div');
+            div.className = 'success';
+            div.textContent = message;
+            document.body.appendChild(div);
+            setTimeout(() => div.remove(), 3000);
+        }
+
+        // 탭 전환 함수
+        function switchToPanel(panelId) {
+            console.log('🔄 패널 전환:', panelId);
+            
+            // 모든 패널 숨기기
+            document.querySelectorAll('.content-panel').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+            
+            // 선택된 패널 보이기
+            const panel = document.getElementById(panelId);
+            const tab = document.getElementById('tab-' + panelId);
+            
+            if (panel && tab) {
+                panel.classList.add('active');
+                tab.classList.add('active');
+                console.log('✅ 패널 전환 완료:', panelId);
+                
+            // 데이터 로드
+            if (panelId === 'dashboard') loadDashboard();
+            else if (panelId === 'countries') loadCountries();
+            else if (panelId === 'sports') loadSportsCategories();
+            else if (panelId === 'leagues') {
+                loadSelectOptions();
+                loadLeagues();
+            }
+            else if (panelId === 'teams') {
+                loadSelectOptions();
+                loadTeams();
+            }
+            else if (panelId === 'players') loadPlayers();
+
+            // 패널 전환 시 셀렉트 옵션 로드
+            if (panelId === 'leagues' || panelId === 'teams') {
+                loadSelectOptions();
+            }
+            }
+        }
+
+        // 대시보드
+        async function loadDashboard() {
+            console.log('📊 대시보드 로드');
+            try {
+                const results = await Promise.allSettled([
+                    api.get('/countries'),
+                    api.get('/sports-categories'),
+                    api.get('/leagues'),
+                    api.get('/teams'),
+                    api.get('/players')
+                ]);
+
+                document.getElementById('countriesCount').textContent = 
+                    results[0].status === 'fulfilled' ? (results[0].value.data.data.totalCount || 0) : 0;
+                document.getElementById('sportsCount').textContent = 
+                    results[1].status === 'fulfilled' ? (results[1].value.data.data.totalCount || 0) : 0;
+                document.getElementById('leaguesCount').textContent = 
+                    results[2].status === 'fulfilled' ? (results[2].value.data.data.totalCount || 0) : 0;
+                document.getElementById('teamsCount').textContent = 
+                    results[3].status === 'fulfilled' ? (results[3].value.data.data.totalCount || 0) : 0;
+                document.getElementById('playersCount').textContent = 
+                    results[4].status === 'fulfilled' ? (results[4].value.data.data.totalCount || 0) : 0;
+            } catch (error) {
+                console.error('대시보드 로드 실패:', error);
+            }
+        }
+
+        // 국가 관리
+        async function loadCountries() {
+            console.log('🌍 국가 로드');
+            const container = document.getElementById('countriesData');
+            container.innerHTML = '<div class="loading">로딩 중...</div>';
+
+            try {
+                const response = await api.get('/countries?limit=50');
+                const countries = response.data.data.results || [];
+                
+                if (countries.length === 0) {
+                    container.innerHTML = '<p style="text-align: center;">등록된 국가가 없습니다.</p>';
+                    return;
+                }
+
+                container.innerHTML = countries.map(c => `
+                    <div class="data-card">
+                        <h3>🌍 ${c.name}</h3>
+                        <p><strong>ID:</strong> ${c._id}</p>
+                        <p><strong>생성일:</strong> ${new Date(c.createdAt).toLocaleDateString()}</p>
+                        <div style="margin-top: 15px;">
+                            <button class="btn btn-danger" onclick="deleteCountry('${c._id}')">🗑️ 삭제</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                container.innerHTML = '<div class="error">로드 실패</div>';
+            }
+        }
+
+        async function createCountry() {
+            const name = document.getElementById('newCountryName').value.trim();
+            if (!name) {
+                showError('국가명을 입력하세요.');
+                return;
+            }
+
+            try {
+                await api.post('/countries', { name });
+                showSuccess('국가 추가 성공');
+                document.getElementById('newCountryName').value = '';
+                loadCountries();
+                loadDashboard();
+            } catch (error) {
+                showError('국가 추가 실패');
+            }
+        }
+
+        async function deleteCountry(id) {
+            if (!confirm('삭제하시겠습니까?')) return;
+            
+            try {
+                await api.delete(`/countries/${id}`);
+                showSuccess('국가 삭제 성공');
+                loadCountries();
+                loadDashboard();
+            } catch (error) {
+                showError('국가 삭제 실패');
+            }
+        }
+
+        // 스포츠 카테고리
+        async function loadSportsCategories() {
+            console.log('🏃 스포츠 카테고리 로드');
+            const container = document.getElementById('sportsData');
+            container.innerHTML = '<div class="loading">로딩 중...</div>';
+
+            try {
+                const response = await api.get('/sports-categories?limit=50');
+                const sports = response.data.data.results || [];
+                
+                if (sports.length === 0) {
+                    container.innerHTML = '<p style="text-align: center;">등록된 카테고리가 없습니다.</p>';
+                    return;
+                }
+
+                container.innerHTML = sports.map(s => `
+                    <div class="data-card">
+                        <h3>🏃 ${s.name}</h3>
+                        <p><strong>영어명:</strong> ${s.nameEn}</p>
+                        <p><strong>생성일:</strong> ${new Date(s.createdAt).toLocaleDateString()}</p>
+                        <div style="margin-top: 15px;">
+                            <button class="btn btn-danger" onclick="deleteSportsCategory('${s._id}')">🗑️ 삭제</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                container.innerHTML = '<div class="error">로드 실패</div>';
+            }
+        }
+
+        async function createSportsCategory() {
+            const name = document.getElementById('newSportsName').value.trim();
+            const nameEn = document.getElementById('newSportsNameEn').value.trim();
+            
+            if (!name || !nameEn) {
+                showError('모든 필드를 입력하세요.');
+                return;
+            }
+
+            try {
+                await api.post('/sports-categories', { name, nameEn });
+                showSuccess('카테고리 추가 성공');
+                document.getElementById('newSportsName').value = '';
+                document.getElementById('newSportsNameEn').value = '';
+                loadSportsCategories();
+                loadDashboard();
+            } catch (error) {
+                showError('카테고리 추가 실패');
+            }
+        }
+
+        async function deleteSportsCategory(id) {
+            if (!confirm('삭제하시겠습니까?')) return;
+            
+            try {
+                await api.delete(`/sports-categories/${id}`);
+                showSuccess('카테고리 삭제 성공');
+                loadSportsCategories();
+                loadDashboard();
+            } catch (error) {
+                showError('카테고리 삭제 실패');
+            }
+        }
+
+        // 선수 관리
+        async function loadPlayers() {
+            console.log('🏃‍♂️ 선수 로드');
+            const container = document.getElementById('playersData');
+            container.innerHTML = '<div class="loading">로딩 중...</div>';
+
+            try {
+                const response = await api.get('/players?limit=50');
+                const players = response.data.data.results || [];
+                
+                if (players.length === 0) {
+                    container.innerHTML = '<p style="text-align: center;">등록된 선수가 없습니다.</p>';
+                    return;
+                }
+
+                container.innerHTML = players.map(p => `
+                    <div class="data-card">
+                        <h3>🏃‍♂️ ${p.name}</h3>
+                        <p><strong>영어명:</strong> ${p.nameEn}</p>
+                        ${p.position ? `<p><strong>포지션:</strong> ${p.position}</p>` : ''}
+                        <p><strong>생성일:</strong> ${new Date(p.createdAt).toLocaleDateString()}</p>
+                        <div style="margin-top: 15px;">
+                            <button class="btn btn-danger" onclick="deletePlayer('${p._id}')">🗑️ 삭제</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                container.innerHTML = '<div class="error">로드 실패</div>';
+            }
+        }
+
+        async function createPlayer() {
+            const name = document.getElementById('newPlayerName').value.trim();
+            const nameEn = document.getElementById('newPlayerNameEn').value.trim();
+            const position = document.getElementById('newPlayerPosition').value.trim();
+            
+            if (!name || !nameEn) {
+                showError('선수명은 필수입니다.');
+                return;
+            }
+
+            try {
+                const data = { name, nameEn };
+                if (position) data.position = position;
+                
+                await api.post('/players', data);
+                showSuccess('선수 추가 성공');
+                document.getElementById('newPlayerName').value = '';
+                document.getElementById('newPlayerNameEn').value = '';
+                document.getElementById('newPlayerPosition').value = '';
+                loadPlayers();
+                loadDashboard();
+            } catch (error) {
+                showError('선수 추가 실패');
+            }
+        }
+
+        async function deletePlayer(id) {
+            if (!confirm('삭제하시겠습니까?')) return;
+            
+            try {
+                await api.delete(`/players/${id}`);
+                showSuccess('선수 삭제 성공');
+                loadPlayers();
+                loadDashboard();
+            } catch (error) {
+                showError('선수 삭제 실패');
+            }
+        }
+
+        // 리그 관리
+        async function createLeague() {
+            const name = document.getElementById('newLeagueName').value.trim();
+            const nameShort = document.getElementById('newLeagueNameShort').value.trim();
+            const countryId = document.getElementById('newLeagueCountry').value;
+            const sportsCategoryId = document.getElementById('newLeagueSports').value;
+            const description = document.getElementById('newLeagueDescription').value.trim();
+            const batsId = document.getElementById('newLeagueBatsId').value.trim();
+            
+            console.log('🏆 리그 생성 데이터:', { name, nameShort, countryId, sportsCategoryId, description, batsId });
+            
+            if (!name || !countryId || !sportsCategoryId || !description || !batsId) {
+                showError('필수 필드를 모두 입력하세요 (리그명, 국가, 스포츠, 설명, BATS ID).');
+                return;
+            }
+
+            try {
+                const data = {
+                    name,
+                    countryId,
+                    sportsCategoryId,
+                    description,
+                    batsId
+                };
+                
+                if (nameShort) data.nameShort = nameShort;
+                
+                console.log('📤 전송할 리그 데이터:', data);
+                await api.post('/leagues', data);
+                showSuccess('리그 추가 성공');
+                
+                // 폼 초기화
+                document.getElementById('newLeagueName').value = '';
+                document.getElementById('newLeagueNameShort').value = '';
+                document.getElementById('newLeagueCountry').value = '';
+                document.getElementById('newLeagueSports').value = '';
+                document.getElementById('newLeagueDescription').value = '';
+                document.getElementById('newLeagueBatsId').value = '';
+                
+                loadLeagues();
+                loadDashboard();
+            } catch (error) {
+                console.error('❌ 리그 추가 실패:', error);
+                showError('리그 추가 실패: ' + (error.response?.data?.message || error.message));
+            }
+        }
+
+        async function loadLeagues() {
+            console.log('🏆 리그 로드');
+            const container = document.getElementById('leaguesData');
+            container.innerHTML = '<div class="loading">로딩 중...</div>';
+
+            try {
+                const response = await api.get('/leagues?limit=50');
+                const leagues = response.data.data.result || [];
+                
+                if (leagues.length === 0) {
+                    container.innerHTML = '<p style="text-align: center;">등록된 리그가 없습니다.</p>';
+                    return;
+                }
+
+                container.innerHTML = leagues.map(l => `
+                    <div class="data-card">
+                        <h3>🏆 ${l.name}</h3>
+                        ${l.nameShort ? `<p><strong>약칭:</strong> ${l.nameShort}</p>` : ''}
+                        <p><strong>국가:</strong> ${l.country?.name || 'N/A'}</p>
+                        <p><strong>스포츠:</strong> ${l.sportsCategory?.name || 'N/A'}</p>
+                        <p><strong>설명:</strong> ${l.description}</p>
+                        <p><strong>BATS ID:</strong> ${l.batsId}</p>
+                        <div style="margin-top: 15px;">
+                            <button class="btn btn-danger" onclick="deleteLeague('${l._id}')">🗑️ 삭제</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                container.innerHTML = '<div class="error">로드 실패</div>';
+            }
+        }
+
+        async function deleteLeague(id) {
+            if (!confirm('삭제하시겠습니까?')) return;
+            
+            try {
+                await api.delete(`/leagues/${id}`);
+                showSuccess('리그 삭제 성공');
+                loadLeagues();
+                loadDashboard();
+            } catch (error) {
+                showError('리그 삭제 실패');
+            }
+        }
+
+        // 팀 관리
+        async function createTeam() {
+            const name = document.getElementById('newTeamName').value.trim();
+            const description = document.getElementById('newTeamDescription').value.trim();
+            const countryId = document.getElementById('newTeamCountry').value;
+            const sportsCategoryId = document.getElementById('newTeamSports').value;
+            const stadiumName = document.getElementById('newTeamStadium').value.trim();
+            const batsId = document.getElementById('newTeamBatsId').value.trim();
+            
+            console.log('⚽ 팀 생성 데이터:', { name, description, countryId, sportsCategoryId, stadiumName, batsId });
+            
+            if (!name || !countryId || !sportsCategoryId) {
+                showError('필수 필드를 모두 입력하세요 (팀명, 국가, 스포츠).');
+                return;
+            }
+
+            try {
+                const data = {
+                    name,
+                    countryId,
+                    sportsCategoryId,
+                    players: [] // 빈 선수 배열
+                };
+                
+                if (description) data.description = description;
+                if (stadiumName) data.stadiumName = stadiumName;
+                if (batsId) data.batsId = batsId;
+                
+                console.log('📤 전송할 팀 데이터:', data);
+                await api.post('/teams', data);
+                showSuccess('팀 추가 성공');
+                
+                // 폼 초기화
+                document.getElementById('newTeamName').value = '';
+                document.getElementById('newTeamDescription').value = '';
+                document.getElementById('newTeamCountry').value = '';
+                document.getElementById('newTeamSports').value = '';
+                document.getElementById('newTeamStadium').value = '';
+                document.getElementById('newTeamBatsId').value = '';
+                
+                loadTeams();
+                loadDashboard();
+            } catch (error) {
+                console.error('❌ 팀 추가 실패:', error);
+                showError('팀 추가 실패: ' + (error.response?.data?.message || error.message));
+            }
+        }
+
+        // 팀 로드
+        async function loadTeams() {
+            console.log('⚽ 팀 로드');
+            const container = document.getElementById('teamsData');
+            container.innerHTML = '<div class="loading">로딩 중...</div>';
+
+            try {
+                const response = await api.get('/teams?limit=50');
+                const teams = response.data.data.result || [];
+                
+                if (teams.length === 0) {
+                    container.innerHTML = '<p style="text-align: center;">등록된 팀이 없습니다.</p>';
+                    return;
+                }
+
+                container.innerHTML = teams.map(t => `
+                    <div class="data-card">
+                        <h3>⚽ ${t.name}</h3>
+                        ${t.description ? `<p><strong>설명:</strong> ${t.description}</p>` : ''}
+                        <p><strong>국가:</strong> ${t.country?.name || 'N/A'}</p>
+                        <p><strong>스포츠:</strong> ${t.sportsCategory?.name || 'N/A'}</p>
+                        ${t.stadiumName ? `<p><strong>홈구장:</strong> ${t.stadiumName}</p>` : ''}
+                        <p><strong>선수 수:</strong> ${t.players?.length || 0}명</p>
+                        ${t.batsId ? `<p><strong>BATS ID:</strong> ${t.batsId}</p>` : ''}
+                        <div style="margin-top: 15px;">
+                            <button class="btn btn-danger" onclick="deleteTeam('${t._id}')">🗑️ 삭제</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                container.innerHTML = '<div class="error">로드 실패</div>';
+            }
+        }
+
+        async function deleteTeam(id) {
+            if (!confirm('삭제하시겠습니까?')) return;
+            
+            try {
+                await api.delete(`/teams/${id}`);
+                showSuccess('팀 삭제 성공');
+                loadTeams();
+                loadDashboard();
+            } catch (error) {
+                showError('팀 삭제 실패');
+            }
+        }
+
+        // 이벤트 리스너 설정
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('✅ 페이지 로드 완료');
+            
+            // 탭 클릭 이벤트
+            document.getElementById('tab-dashboard').addEventListener('click', () => switchToPanel('dashboard'));
+            document.getElementById('tab-countries').addEventListener('click', () => switchToPanel('countries'));
+            document.getElementById('tab-sports').addEventListener('click', () => switchToPanel('sports'));
+            document.getElementById('tab-leagues').addEventListener('click', () => switchToPanel('leagues'));
+            document.getElementById('tab-teams').addEventListener('click', () => switchToPanel('teams'));
+            document.getElementById('tab-players').addEventListener('click', () => switchToPanel('players'));
+            
+            // 버튼 클릭 이벤트
+            document.getElementById('addCountryBtn').addEventListener('click', createCountry);
+            document.getElementById('refreshCountriesBtn').addEventListener('click', loadCountries);
+            document.getElementById('addSportsBtn').addEventListener('click', createSportsCategory);
+            document.getElementById('refreshSportsBtn').addEventListener('click', loadSportsCategories);
+            document.getElementById('addLeagueBtn').addEventListener('click', createLeague);
+            document.getElementById('refreshLeaguesBtn').addEventListener('click', loadLeagues);
+            document.getElementById('addTeamBtn').addEventListener('click', createTeam);
+            document.getElementById('refreshTeamsBtn').addEventListener('click', loadTeams);
+            document.getElementById('addPlayerBtn').addEventListener('click', createPlayer);
+            document.getElementById('refreshPlayersBtn').addEventListener('click', loadPlayers);
+            
+            // 초기 대시보드 로드
+            loadDashboard();
+        });
+
+        console.log('🚀 스크립트 로드 완료');
+    </script>
+</body>
+</html>
