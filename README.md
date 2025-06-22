@@ -67,6 +67,21 @@ $ docker-compose ps
 $ curl http://localhost/health
 $ curl http://localhost/
 
+
+# VSCode에서 로컬에 node_modules가 없어서 TypeScript 타입을 찾지 못하면 코드에서 에러 표시가 되기 때문에, 로컬에서도 아래 명령어로 node_modules 설치하는게 좋다.
+# 단! Docker에서 실행되기 때문에 VSCode에서 코드 에러 표시가 된다고해서 실행이 안 되는 것이 아니다. 단지 개발 편의성을 위해 설치하는 것!
+# 버전 확인
+node --version
+pnpm --version
+# 프로젝트 루트에서
+# 로컬에 Node.js와 pnpm 임시 설치 (개발용)
+$ brew install node pnpm
+# 로컬에 의존성 설치 (VS Code용)
+$ pnpm install
+# 설치 확인
+ls -la node_modules/@nestjs/config
+# 
+
 ```
 
 ## 📋 시스템 요구사항
