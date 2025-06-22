@@ -80,7 +80,66 @@ $ brew install node pnpm
 $ pnpm install
 # 설치 확인
 ls -la node_modules/@nestjs/config
-# 
+
+
+
+
+
+
+
+
+
+# Ubuntu Desktop PC 에서 시작하기
+
+# Docker 와 Docker Compose 설치
+# 1단계: Docker Engine 설치 
+# 업데이트 및 필수 패키지 설치:
+$ sudo apt update
+$ sudo apt install apt-transport-https ca-certificates curl software-properties-common
+# Docker의 GPG 키 추가: 
+$ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+# Docker 저장소 추가: 
+$ echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+# apt 패키지 업데이트 및 Docker 설치: 
+$ sudo apt update
+$ sudo apt install docker-ce docker-ce-cli containerd.io
+# Docker 실행 권한 확인 및 실행: 
+$ sudo systemctl enable docker
+$ sudo systemctl start docker
+$ sudo systemctl status docker
+# 2단계: Docker Compose 설치 
+# Docker 공식 저장소를 이용한 설치:
+# Docker Compose 설치: 
+$ sudo apt update
+$ sudo apt install docker-compose-plugin
+# 설치 확인:
+$ docker compose version
+
+
+# Docker 실행
+# 이전 컨테이너/이미지 정리 (선택사항)
+docker system prune -a -f
+# 🔥 Ubuntu에서는 docker-compose 대신 docker compose 사용!
+docker compose down -v
+# 서비스 시작
+docker compose up -d
+# 빌드가 필요한 경우
+docker compose up -d --build
+# 상태 확인
+docker compose ps
+docker compose logs -f
+# 리소스 사용량 확인
+docker stats
+
+# 접속 테스트
+# 헬스체크
+curl http://localhost/health
+curl http://localhost:4011/health
+# API 테스트
+curl http://localhost/api
+curl http://localhost/api/v1/countries
+# 브라우저 테스트
+http://175.126.95.157/api
 
 ```
 
