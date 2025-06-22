@@ -1,0 +1,112 @@
+services:
+  # ===================
+  # NestJS 애플리케이션
+  # ===================
+  nestjs-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: matchnow-nestjs
+    restart: unless-stopped
+    ports:
+      - "4011:4011"  # 직접 접속도 가능하도록 복원
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=4011
+      - MONGODB_URI=mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongodb:27017/${MONGO_DATABASE}?authSource=admin
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - matchnow-network
+
+  # ===================
+  # MongoDB 데이터베이스
+    # 처음엔 MongoDB 7.0 버전으로 시도했으나 현재 Ubuntu Desktop PC에서 사용 중인 CPU가 AVX 지원하지 않아서 4. 버전으로 설치함. (5. 버전부터 CPU가 AVX 지원해야 함)
+      # AVX 지원 확인
+        # $grep -o 'avx[^ ]*' /proc/cpuinfo
+          # 결과가 없으면 AVX 미지원
+          # 결과가 있으면 AVX 지원
+  # ===================
+  mongodb:
+    image: mongo:4.4
+    container_name: matchnow-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"  # MongoDB 직접 접속 가능
+    volumes:
+      - ./docker/mongodb/data:/data/db
+      - ./docker/mongodb/logs:/var/log/mongodb
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+      MONGO_INITDB_DATABASE: ${MONGO_DATABASE}
+    command: >
+      mongod
+      --auth
+      --logpath /var/log/mongodb/mongod.log
+      --logappend
+      --bind_ip_all
+    networks:
+      - matchnow-network
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # ===================
+  # Nginx (80포트 메인 + 4011포트 프록시)
+  # ===================
+  nginx:
+    image: nginx:alpine
+    container_name: matchnow-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"      # 메인 접속 (우선순위)
+      # - "8080:8080"  # 추가 포트 (선택사항)
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - nestjs-app
+    networks:
+      - matchnow-network
+
+  # ===================
+  # MongoDB 관리 도구 (개발용)
+  # ===================
+  mongo-express:
+    image: mongo-express:latest
+    container_name: matchnow-mongo-express
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_ROOT_USERNAME}
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_ROOT_PASSWORD}
+      ME_CONFIG_MONGODB_URL: mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongodb:27017/
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: ${MONGO_EXPRESS_PASSWORD}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - matchnow-network
+    profiles:
+      - dev-tools
+
+networks:
+  matchnow-network:
+    driver: bridge
+
+volumes:
+  mongodb_data:
+    driver: local
+
+  
