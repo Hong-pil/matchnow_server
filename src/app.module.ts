@@ -1,8 +1,11 @@
+// src/app.module.ts 수정
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TerminusModule } from '@nestjs/terminus';
 import { ClsModule } from 'nestjs-cls';
 import { MongooseModule } from '@nestjs/mongoose';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 
 import { ClsStoreKey } from '@/common/constants/cls.constant';
 
@@ -23,6 +26,13 @@ import { GamesModule } from './modules/games/games.module';
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    
+    // 정적 파일 서빙 모듈 추가
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'public'),
+      serveRoot: '/admin',
+    }),
+    
     ClsModule.forRoot({
       global: true,
       middleware: {
@@ -37,7 +47,6 @@ import { GamesModule } from './modules/games/games.module';
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => {
-        // 여러 방법으로 URI 시도
         const uri = configService.get<string>('db.service.connection.uri') || 
                     configService.get<string>('MONGODB_URI') ||
                     process.env.MONGODB_URI || 

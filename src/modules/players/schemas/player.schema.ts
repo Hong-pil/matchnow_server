@@ -12,7 +12,7 @@ export class Player {
 
   @ApiProperty({ example: 'Jisung Park' })
   @Prop({ type: String, required: true })
-  nameEng: string;
+  nameEn: string;
 
   @ApiProperty({ example: 'midfielder' })
   @Prop({ type: String, required: false })

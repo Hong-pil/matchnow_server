@@ -6,7 +6,7 @@ import { Player } from '../schemas/player.schema';
 
 export class CreatePlayerDto extends PickType(Player, [
   'name',
-  'nameEng',
+  'nameEn',
   'position',
   'healthStatus',
   'photos',
