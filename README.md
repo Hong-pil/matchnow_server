@@ -86,6 +86,22 @@ ls -la node_modules/@nestjs/config
 
 
 
+# 맥북에서 시작하기
+# 1. Docker 앱 실행
+# 2. 프로젝트 실행
+  # 서비스 시작
+  $ docker-compose up -d
+  # 컨테이너 리소스 사용량
+  $ docker stats
+  # 모든 서비스 확인
+  $ docker-compose ps
+# 3. 로그 확인
+docker-compose logs -f
+docker-compose logs -f nestjs-app
+docker-compose logs -f nginx
+docker-compose logs -f mongodb
+
+
 
 
 
