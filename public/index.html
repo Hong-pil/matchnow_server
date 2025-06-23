@@ -23,9 +23,13 @@
         .btn-primary { background: linear-gradient(45deg, #667eea, #764ba2); color: white; }
         .btn-success { background: linear-gradient(45deg, #4CAF50, #45a049); color: white; }
         .btn-danger { background: linear-gradient(45deg, #ff6b6b, #ee5a52); color: white; }
-        .data-grid { display: grid; gap: 20px; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); }
-        .data-card { background: #f8f9fa; border-radius: 15px; padding: 25px; transition: all 0.3s ease; }
-        .data-card:hover { transform: translateY(-5px); box-shadow: 0 15px 35px rgba(0,0,0,0.1); }
+        .data-list { display: flex; flex-direction: column; gap: 15px; max-height: 70vh; overflow-y: auto; padding-right: 10px; }
+        .data-list::-webkit-scrollbar { width: 8px; }
+        .data-list::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 10px; }
+        .data-list::-webkit-scrollbar-thumb { background: linear-gradient(45deg, #667eea, #764ba2); border-radius: 10px; }
+        .data-list::-webkit-scrollbar-thumb:hover { background: linear-gradient(45deg, #5a67d8, #6c5b7b); }
+        .data-card { background: #f8f9fa; border-radius: 15px; padding: 20px; transition: all 0.3s ease; border-left: 4px solid transparent; }
+        .data-card:hover { transform: translateX(5px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); border-left-color: #667eea; }
         .loading { text-align: center; padding: 50px; color: #666; }
         .error { background: #ff6b6b; color: white; padding: 20px; border-radius: 10px; margin: 20px 0; text-align: center; }
         .success { background: #4CAF50; color: white; padding: 20px; border-radius: 10px; margin: 20px 0; text-align: center; }
@@ -88,7 +92,7 @@
                 <button class="btn btn-success" id="addCountryBtn">➕ 국가 추가</button>
                 <button class="btn btn-primary" id="refreshCountriesBtn">🔄 새로고침</button>
             </div>
-            <div id="countriesData" class="data-grid"></div>
+            <div id="countriesData" class="data-list"></div>
         </div>
 
         <!-- 스포츠 카테고리 패널 -->
@@ -106,7 +110,7 @@
                 <button class="btn btn-success" id="addSportsBtn">➕ 카테고리 추가</button>
                 <button class="btn btn-primary" id="refreshSportsBtn">🔄 새로고침</button>
             </div>
-            <div id="sportsData" class="data-grid"></div>
+            <div id="sportsData" class="data-list"></div>
         </div>
 
         <!-- 리그 패널 -->
@@ -144,7 +148,7 @@
                 <button class="btn btn-success" id="addLeagueBtn">➕ 리그 추가</button>
                 <button class="btn btn-primary" id="refreshLeaguesBtn">🔄 새로고침</button>
             </div>
-            <div id="leaguesData" class="data-grid"></div>
+            <div id="leaguesData" class="data-list"></div>
         </div>
 
         <!-- 팀 패널 -->
@@ -182,7 +186,7 @@
                 <button class="btn btn-success" id="addTeamBtn">➕ 팀 추가</button>
                 <button class="btn btn-primary" id="refreshTeamsBtn">🔄 새로고침</button>
             </div>
-            <div id="teamsData" class="data-grid"></div>
+            <div id="teamsData" class="data-list"></div>
         </div>
 
         <!-- 선수 패널 -->
@@ -204,7 +208,7 @@
                 <button class="btn btn-success" id="addPlayerBtn">➕ 선수 추가</button>
                 <button class="btn btn-primary" id="refreshPlayersBtn">🔄 새로고침</button>
             </div>
-            <div id="playersData" class="data-grid"></div>
+            <div id="playersData" class="data-list"></div>
         </div>
     </div>
 
