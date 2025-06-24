@@ -10,7 +10,7 @@ services:
     container_name: matchnow-nestjs
     restart: unless-stopped
     ports:
-      - "4011:4011"  # 직접 접속도 가능하도록 복원
+      - "4011:4011"
     volumes:
       - .:/app
       - /app/node_modules
@@ -26,7 +26,7 @@ services:
       - matchnow-network
 
   # ===================
-  # MongoDB 데이터베이스 (Ubuntu 최적화)
+  # MongoDB 데이터베이스 (Ubuntu 최적화, 외부 접근 허용)
     # 처음엔 MongoDB 7.0 버전으로 시도했으나 현재 Ubuntu Desktop PC에서 사용 중인 CPU가 AVX 지원하지 않아서 4. 버전으로 설치함. (5. 버전부터 CPU가 AVX 지원해야 함)
       # AVX 지원 확인
         # $grep -o 'avx[^ ]*' /proc/cpuinfo
@@ -38,7 +38,7 @@ services:
     container_name: matchnow-mongodb
     restart: unless-stopped
     ports:
-      - "27017:27017"
+      - "0.0.0.0:27017:27017"
     volumes:
       - ./docker/mongodb/data:/data/db
       - ./docker/mongodb/logs:/var/log/mongodb
@@ -68,8 +68,8 @@ services:
     container_name: matchnow-nginx
     restart: unless-stopped
     ports:
-      - "80:80"      # 메인 접속 (우선순위)
-      - "8080:8080"  # 추가 포트 (선택사항)
+      - "0.0.0.0:80:80"
+      - "0.0.0.0:8080:8080"
     volumes:
       - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
@@ -85,7 +85,7 @@ services:
     container_name: matchnow-mongo-express
     restart: unless-stopped
     ports:
-      - "8081:8081"
+      - "0.0.0.0:8081:8081"
     environment:
       ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_ROOT_USERNAME}
       ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_ROOT_PASSWORD}
