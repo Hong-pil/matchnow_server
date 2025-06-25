@@ -1,4 +1,3 @@
-// src/app.module.ts 수정
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TerminusModule } from '@nestjs/terminus';
@@ -19,6 +18,7 @@ import { LeaguesModule } from './modules/leagues/leagues.module';
 import { PlayersModule } from './modules/players/players.module';
 import { TeamsModule } from './modules/teams/teams.module';
 import { GamesModule } from './modules/games/games.module';
+import { BetsApiModule } from './modules/betsapi/betsapi.module';
 
 @Module({
   imports: [
@@ -70,6 +70,7 @@ import { GamesModule } from './modules/games/games.module';
     PlayersModule,
     TeamsModule,
     GamesModule,
+    BetsApiModule,
   ],
   controllers: [AppController],
   providers: [AppHealthIndicator],
