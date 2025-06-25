@@ -1,60 +1,14 @@
 // src/modules/betsapi/services/betsapi.service.ts
 import { Injectable, Logger } from '@nestjs/common';
-
-export interface BetsApiFixture {
-  id: string;
-  sport_id: string;
-  time: string;
-  time_status: string;
-  league: {
-    id: string;
-    name: string;
-  };
-  home: {
-    id: string;
-    name: string;
-    image_id?: string;
-  };
-  away: {
-    id: string;
-    name: string;
-    image_id?: string;
-  };
-  ss?: string; // score
-  timer?: {
-    tm: string; // time minute
-    ts: string; // time second
-  };
-  stats?: any;
-}
-
-export interface BetsApiResponse {
-  success: number;
-  pager?: {
-    page: number;
-    per_page: number;
-    total: number;
-  };
-  results: BetsApiFixture[];
-}
-
-export interface BetsApiLeague {
-  id: string;
-  name: string;
-  cc?: string; // country code
-  has_leaguetable?: string;
-  has_toplist?: string;
-}
-
-export interface BetsApiLeagueResponse {
-  success: number;
-  pager?: {
-    page: number;
-    per_page: number;
-    total: number;
-  };
-  results: BetsApiLeague[];
-}
+import {
+  BetsApiUpcomingResponse,
+  BetsApiInplayResponse,
+  BetsApiEndedResponse,
+  BetsApiLeaguesResponse,
+  BetsApiFixture,
+  MatchType,
+  MatchTimeStatus,
+} from '../types/betsapi.types';
 
 @Injectable()
 export class BetsApiService {
@@ -65,7 +19,7 @@ export class BetsApiService {
   /**
    * 예정된 축구 경기 목록 조회 (v3 API)
    */
-  async getUpcomingMatches(page: number = 1): Promise<BetsApiResponse> {
+  async getUpcomingMatches(page: number = 1): Promise<BetsApiUpcomingResponse> {
     try {
       const url = `${this.baseUrl}/v3/events/upcoming?sport_id=1&token=${this.token}&page=${page}`;
       
@@ -77,9 +31,9 @@ export class BetsApiService {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
-      const data: BetsApiResponse = await response.json();
+      const data: BetsApiUpcomingResponse = await response.json();
       
-      this.logger.log(`Fetched ${data.results?.length || 0} upcoming matches`);
+      this.logger.log(`Fetched ${data.results?.length || 0} upcoming matches (Total: ${data.pager?.total || 0})`);
       
       return data;
     } catch (error) {
@@ -91,7 +45,7 @@ export class BetsApiService {
   /**
    * 진행 중인 축구 경기 목록 조회 (v3 API)
    */
-  async getInplayMatches(): Promise<BetsApiResponse> {
+  async getInplayMatches(): Promise<BetsApiInplayResponse> {
     try {
       const url = `${this.baseUrl}/v3/events/inplay?sport_id=1&token=${this.token}`;
       
@@ -103,7 +57,7 @@ export class BetsApiService {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
-      const data: BetsApiResponse = await response.json();
+      const data: BetsApiInplayResponse = await response.json();
       
       this.logger.log(`Fetched ${data.results?.length || 0} inplay matches`);
       
@@ -117,7 +71,7 @@ export class BetsApiService {
   /**
    * 종료된 축구 경기 목록 조회 (v3 API)
    */
-  async getEndedMatches(page: number = 1, day?: string): Promise<BetsApiResponse> {
+  async getEndedMatches(page: number = 1, day?: string): Promise<BetsApiEndedResponse> {
     try {
       let url = `${this.baseUrl}/v3/events/ended?sport_id=1&token=${this.token}&page=${page}`;
       
@@ -134,9 +88,9 @@ export class BetsApiService {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
-      const data: BetsApiResponse = await response.json();
+      const data: BetsApiEndedResponse = await response.json();
       
-      this.logger.log(`Fetched ${data.results?.length || 0} ended matches`);
+      this.logger.log(`Fetched ${data.results?.length || 0} ended matches (Total: ${data.pager?.total || 0})`);
       
       return data;
     } catch (error) {
@@ -146,7 +100,7 @@ export class BetsApiService {
   }
 
   /**
-   * 특정 경기 상세 정보 조회
+   * 특정 경기 상세 정보 조회 (v1 API)
    */
   async getMatchDetails(eventId: string): Promise<any> {
     try {
@@ -174,7 +128,7 @@ export class BetsApiService {
   /**
    * 리그 목록 조회 (v1 API)
    */
-  async getLeagues(page: number = 1): Promise<BetsApiLeagueResponse> {
+  async getLeagues(page: number = 1): Promise<BetsApiLeaguesResponse> {
     try {
       const url = `${this.baseUrl}/v1/league?sport_id=1&token=${this.token}&page=${page}`;
       
@@ -186,9 +140,9 @@ export class BetsApiService {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
-      const data: BetsApiLeagueResponse = await response.json();
+      const data: BetsApiLeaguesResponse = await response.json();
       
-      this.logger.log(`Fetched ${data.results?.length || 0} leagues`);
+      this.logger.log(`Fetched ${data.results?.length || 0} leagues (Total: ${data.pager?.total || 0})`);
       
       return data;
     } catch (error) {
@@ -226,7 +180,11 @@ export class BetsApiService {
   /**
    * 특정 리그의 경기만 조회
    */
-  async getLeagueMatches(leagueId: string, type: 'upcoming' | 'inplay' | 'ended' = 'upcoming', page: number = 1): Promise<BetsApiResponse> {
+  async getLeagueMatches(
+    leagueId: string, 
+    type: MatchType = 'upcoming', 
+    page: number = 1
+  ): Promise<BetsApiUpcomingResponse | BetsApiInplayResponse | BetsApiEndedResponse> {
     try {
       let url = '';
       
@@ -250,7 +208,7 @@ export class BetsApiService {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       
-      const data: BetsApiResponse = await response.json();
+      const data = await response.json();
       
       this.logger.log(`Fetched ${data.results?.length || 0} ${type} matches for league ${leagueId}`);
       
@@ -259,5 +217,63 @@ export class BetsApiService {
       this.logger.error(`Error fetching ${type} matches for league ${leagueId}:`, error);
       throw new Error(`Failed to fetch ${type} matches for league: ${error.message}`);
     }
+  }
+
+  /**
+   * 경기 상태별 필터링 유틸리티 메소드
+   */
+  filterMatchesByStatus(matches: BetsApiFixture[], status: MatchTimeStatus): BetsApiFixture[] {
+    return matches.filter(match => match.time_status === status);
+  }
+
+  /**
+   * 경기 시간 포맷팅 유틸리티 메소드
+   */
+  formatMatchTime(timestamp: string): string {
+    const matchTime = new Date(parseInt(timestamp) * 1000);
+    return matchTime.toLocaleString('ko-KR', { 
+      timeZone: 'Asia/Seoul',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
+  /**
+   * 경기 상태 텍스트 변환 유틸리티 메소드
+   */
+  getMatchStatusText(status: MatchTimeStatus): string {
+    switch (status) {
+      case MatchTimeStatus.SCHEDULED:
+        return '예정';
+      case MatchTimeStatus.IN_PLAY:
+        return '진행중';
+      case MatchTimeStatus.HALFTIME:
+        return '하프타임';
+      case MatchTimeStatus.FINISHED:
+        return '종료';
+      case MatchTimeStatus.POSTPONED:
+        return '연기';
+      case MatchTimeStatus.CANCELLED:
+        return '취소';
+      default:
+        return '알 수 없음';
+    }
+  }
+
+  /**
+   * 통계 데이터 파싱 유틸리티 메소드
+   */
+  parseStatsArray(statsArray: [string, string] | undefined): { home: number; away: number } | null {
+    if (!statsArray || statsArray.length !== 2) {
+      return null;
+    }
+    
+    return {
+      home: parseInt(statsArray[0]) || 0,
+      away: parseInt(statsArray[1]) || 0,
+    };
   }
 }
