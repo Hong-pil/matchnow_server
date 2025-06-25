@@ -88,18 +88,40 @@ ls -la node_modules/@nestjs/config
 
 # 맥북에서 시작하기
 # 1. Docker 앱 실행
-# 2. 프로젝트 실행
+# 2. MongoDB 실행
+  $ brew services start mongodb/brew/mongodb-community@4.4
+    # 설치 안 되어 있다면? 설치하기
+      # 1. mongodb-community@4.4 설치
+        $ brew update
+        $ arch -arm64 brew install mongodb-community@4.4 (AVX 미지원 CPU용)
+          # (Ubuntu Desktop PC의 CPU가 AVX 미지원 모델이기 때문에 맥북에서도 동일하게 설치)
+      # 2. PATH에 MongoDB 추가
+        $ echo 'export PATH="/opt/homebrew/opt/mongodb-community@4.4/bin:$PATH"' >> ~/.zshrc
+        # 터미널 재시작 또는 설정 다시 로드
+          $ source ~/.zshrc 또는 터미널을 완전히 종료했다가 다시 열어도 됨
+      # 3. 설치 확인
+        $ mongod --version
+        $ mongo --version
+        4. MongoDB 서비스 시작
+      # 4. MongoDB 서비스 시작 (백그라운드에서 자동 실행)
+        $ brew services start mongodb/brew/mongodb-community@4.4
+        # 또는 일회성으로 실행
+        $ mongod --config /opt/homebrew/etc/mongod.conf
+      # 5. 서비스 상태 확인
+        $ brew services list | grep mongodb
+      # 6. MongoDB 셸 접속
+        $ mongo
+# 3. 프로젝트 실행
   # 서비스 시작
   $ docker-compose up -d
   # 컨테이너 리소스 사용량
   $ docker stats
   # 모든 서비스 확인
   $ docker-compose ps
-# 3. 로그 확인
-docker-compose logs -f
-docker-compose logs -f nestjs-app
-docker-compose logs -f nginx
-docker-compose logs -f mongodb
+# 4. 로그 확인
+  $ docker-compose logs -f
+  $ docker-compose logs -f nestjs-app
+  $ docker-compose logs -f nginx
 
 
 
