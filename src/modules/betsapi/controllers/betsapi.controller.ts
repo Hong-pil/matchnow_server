@@ -43,16 +43,23 @@ export class BetsApiController {
     type: String,
     description: 'Filter by specific league ID',
   })
+  @ApiQuery({
+    name: 'day',
+    required: false,
+    type: String,
+    description: 'Filter by specific day (YYYYMMDD format, e.g., 20241225)',
+  })
   async getUpcomingMatches(
     @Query('page', { transform: (value) => Number(value || 1) }) page: number = 1,
     @Query('league_id') leagueId?: string,
+    @Query('day') day?: string,
   ) {
     let matches;
     
     if (leagueId) {
-      matches = await this.betsApiService.getLeagueMatches(leagueId, 'upcoming', page);
+      matches = await this.betsApiService.getLeagueMatches(leagueId, 'upcoming', page, day);
     } else {
-      matches = await this.betsApiService.getUpcomingMatches(page);
+      matches = await this.betsApiService.getUpcomingMatches(page, day);
     }
     
     return {
@@ -151,7 +158,7 @@ export class BetsApiController {
     let matches;
     
     if (leagueId) {
-      matches = await this.betsApiService.getLeagueMatches(leagueId, 'ended', page);
+      matches = await this.betsApiService.getLeagueMatches(leagueId, 'ended', page, day);
     } else {
       matches = await this.betsApiService.getEndedMatches(page, day);
     }
@@ -310,12 +317,19 @@ export class BetsApiController {
     default: 1,
     description: 'Page number for pagination (upcoming, ended only)',
   })
+  @ApiQuery({
+    name: 'day',
+    required: false,
+    type: String,
+    description: 'Filter by specific day (YYYYMMDD format, upcoming/ended only)',
+  })
   async getLeagueMatches(
     @Param('leagueId') leagueId: string,
     @Param('type') type: MatchType,
     @Query('page', { transform: (value) => Number(value || 1) }) page: number = 1,
+    @Query('day') day?: string,
   ) {
-    const matches = await this.betsApiService.getLeagueMatches(leagueId, type, page);
+    const matches = await this.betsApiService.getLeagueMatches(leagueId, type, page, day);
     return {
       success: true,
       data: matches,

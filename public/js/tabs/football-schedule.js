@@ -1,10 +1,27 @@
 // 경기 데이터 로드
 const FootballSchedule = {
+    // 현재 선택된 날짜 상태
+    currentDate: new Date(),
+
     // 축구 경기 일정 HTML 템플릿
     template: `
         <div class="content-panel">
             <h2>⚽ 축구 경기 일정</h2>
             
+            <!-- 날짜 선택 섹션 -->
+            <div class="date-selector-section">
+                <h3>📅 날짜 선택</h3>
+                <div class="date-controls">
+                    <button class="btn btn-info" id="prevDayBtn">◀ 어제</button>
+                    <input type="date" id="datePicker" class="form-control date-picker">
+                    <button class="btn btn-info" id="nextDayBtn">내일 ▶</button>
+                    <button class="btn btn-primary" id="todayBtn">오늘</button>
+                </div>
+                <div class="selected-date-display">
+                    <span id="selectedDateText">오늘 날짜</span>
+                </div>
+            </div>
+
             <div class="match-tabs">
                 <button class="match-tab active" id="upcoming-tab">예정된 경기</button>
                 <button class="match-tab" id="inplay-tab">진행 중인 경기</button>
@@ -29,6 +46,10 @@ const FootballSchedule = {
         // 템플릿 렌더링
         Utils.renderContent(this.template);
         
+        // 현재 날짜로 초기화
+        this.currentDate = new Date();
+        this.updateDateDisplay();
+        
         // 이벤트 리스너 등록
         this.attachEventListeners();
         
@@ -38,11 +59,96 @@ const FootballSchedule = {
 
     // 이벤트 리스너 등록
     attachEventListeners() {
+        // 기존 탭 이벤트
         document.getElementById('upcoming-tab').addEventListener('click', () => this.switchMatchType('upcoming'));
         document.getElementById('inplay-tab').addEventListener('click', () => this.switchMatchType('inplay'));
         document.getElementById('ended-tab').addEventListener('click', () => this.switchMatchType('ended'));
         document.getElementById('refreshMatchesBtn').addEventListener('click', () => this.loadMatches());
         document.getElementById('loadLeaguesBtn').addEventListener('click', () => this.loadLeagues());
+        
+        // 새로운 날짜 선택 이벤트
+        document.getElementById('prevDayBtn').addEventListener('click', () => this.changeDate(-1));
+        document.getElementById('nextDayBtn').addEventListener('click', () => this.changeDate(1));
+        document.getElementById('todayBtn').addEventListener('click', () => this.setToday());
+        document.getElementById('datePicker').addEventListener('change', (e) => this.setDateFromPicker(e.target.value));
+    },
+
+    // 날짜 변경 (+1일 또는 -1일)
+    changeDate(days) {
+        this.currentDate.setDate(this.currentDate.getDate() + days);
+        this.updateDateDisplay();
+        this.loadMatches();
+    },
+
+    // 오늘 날짜로 설정
+    setToday() {
+        this.currentDate = new Date();
+        this.updateDateDisplay();
+        this.loadMatches();
+    },
+
+    // 날짜 선택기에서 날짜 설정
+    setDateFromPicker(dateString) {
+        if (dateString) {
+            this.currentDate = new Date(dateString + 'T00:00:00');
+            this.updateDateDisplay();
+            this.loadMatches();
+        }
+    },
+
+    // 날짜 표시 업데이트
+    updateDateDisplay() {
+        const datePicker = document.getElementById('datePicker');
+        const selectedDateText = document.getElementById('selectedDateText');
+        
+        if (datePicker && selectedDateText) {
+            // 날짜 선택기에 현재 날짜 설정
+            const dateString = this.currentDate.toISOString().split('T')[0];
+            datePicker.value = dateString;
+            
+            // 선택된 날짜 텍스트 업데이트
+            const today = new Date();
+            const isToday = this.isSameDate(this.currentDate, today);
+            
+            if (isToday) {
+                selectedDateText.textContent = `오늘 (${this.formatDateKorean(this.currentDate)})`;
+            } else {
+                const dayDiff = Math.floor((this.currentDate - today) / (1000 * 60 * 60 * 24));
+                if (dayDiff === -1) {
+                    selectedDateText.textContent = `어제 (${this.formatDateKorean(this.currentDate)})`;
+                } else if (dayDiff === 1) {
+                    selectedDateText.textContent = `내일 (${this.formatDateKorean(this.currentDate)})`;
+                } else {
+                    selectedDateText.textContent = this.formatDateKorean(this.currentDate);
+                }
+            }
+        }
+    },
+
+    // 두 날짜가 같은 날인지 확인
+    isSameDate(date1, date2) {
+        return date1.getFullYear() === date2.getFullYear() &&
+               date1.getMonth() === date2.getMonth() &&
+               date1.getDate() === date2.getDate();
+    },
+
+    // 한국어 날짜 포맷
+    formatDateKorean(date) {
+        const year = date.getFullYear();
+        const month = date.getMonth() + 1;
+        const day = date.getDate();
+        const dayNames = ['일', '월', '화', '수', '목', '금', '토'];
+        const dayName = dayNames[date.getDay()];
+        
+        return `${year}년 ${month}월 ${day}일 (${dayName})`;
+    },
+
+    // YYYYMMDD 형식으로 날짜 변환
+    formatDateForAPI(date) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}${month}${day}`;
     },
 
     // 경기 타입 전환
@@ -60,31 +166,50 @@ const FootballSchedule = {
     // 경기 데이터 로드
     async loadMatches() {
         console.log(`⚽ ${CONFIG.state.currentMatchType} 경기 로드 (페이지 ${CONFIG.state.currentPage})`);
+        console.log(`📅 선택된 날짜: ${this.formatDateForAPI(this.currentDate)}`);
+        
         const container = document.getElementById('matchesData');
         container.innerHTML = Utils.createLoadingHTML('축구 경기 데이터를 불러오는 중...');
 
         try {
             let endpoint = '';
+            const dateParam = this.formatDateForAPI(this.currentDate);
+            
             switch (CONFIG.state.currentMatchType) {
                 case 'upcoming':
-                    endpoint = `/football/matches/upcoming?page=${CONFIG.state.currentPage}`;
+                    // 예정된 경기: 선택된 날짜의 경기만
+                    endpoint = `/football/matches/upcoming?page=${CONFIG.state.currentPage}&day=${dateParam}`;
                     break;
                 case 'inplay':
+                    // 진행 중인 경기: 실시간이므로 날짜 필터링 없음 (현재 진행 중인 경기만)
                     endpoint = '/football/matches/inplay';
                     break;
                 case 'ended':
-                    endpoint = `/football/matches/ended?page=${CONFIG.state.currentPage}`;
+                    // 종료된 경기: 선택된 날짜의 경기만
+                    endpoint = `/football/matches/ended?page=${CONFIG.state.currentPage}&day=${dateParam}`;
                     break;
             }
 
+            console.log('🌐 API 요청:', CONFIG.API_BASE + endpoint);
             const response = await CONFIG.api.get(endpoint);
+            console.log('📦 API 응답:', response.data);
+            
             const data = response.data.data;
             
+            if (!data) {
+                console.error('❌ API 응답에 data 필드가 없음:', response.data);
+                container.innerHTML = '<div class="error">API 응답 형식이 올바르지 않습니다.</div>';
+                return;
+            }
+            
             if (!data.results || data.results.length === 0) {
-                container.innerHTML = Utils.createEmptyStateHTML(`현재 ${this.getMatchTypeText(CONFIG.state.currentMatchType)} 경기가 없습니다.`);
+                const dateText = this.isSameDate(this.currentDate, new Date()) ? '오늘' : this.formatDateKorean(this.currentDate);
+                container.innerHTML = Utils.createEmptyStateHTML(`${dateText}에 ${this.getMatchTypeText(CONFIG.state.currentMatchType)} 경기가 없습니다.`);
                 document.getElementById('matchesPagination').style.display = 'none';
                 return;
             }
+
+            console.log(`✅ ${data.results.length}개의 경기를 찾았습니다.`);
 
             // 경기 카드들 렌더링
             container.innerHTML = data.results.map(match => this.createMatchCard(match)).join('');
@@ -97,8 +222,17 @@ const FootballSchedule = {
             }
 
         } catch (error) {
-            console.error('축구 경기 로드 실패:', error);
-            container.innerHTML = '<div class="error">축구 경기 데이터 로드에 실패했습니다.</div>';
+            console.error('❌ 축구 경기 로드 실패:', error);
+            console.error('에러 상세:', error.response?.data || error.message);
+            
+            let errorMessage = '축구 경기 데이터 로드에 실패했습니다.';
+            if (error.response?.status === 404) {
+                errorMessage = 'BetsAPI 서비스를 찾을 수 없습니다. 백엔드 서버를 확인해주세요.';
+            } else if (error.response?.status === 500) {
+                errorMessage = 'BetsAPI 토큰 또는 서버 오류입니다.';
+            }
+            
+            container.innerHTML = `<div class="error">${errorMessage}<br><small>콘솔을 확인하여 자세한 오류를 확인하세요.</small></div>`;
         }
     },
 
@@ -209,70 +343,6 @@ const FootballSchedule = {
         this.loadMatches();
     },
 
-    async loadMatches() {
-        console.log(`⚽ ${CONFIG.state.currentMatchType} 경기 로드 (페이지 ${CONFIG.state.currentPage})`);
-        const container = document.getElementById('matchesData');
-        container.innerHTML = Utils.createLoadingHTML('축구 경기 데이터를 불러오는 중...');
-
-        try {
-            let endpoint = '';
-            switch (CONFIG.state.currentMatchType) {
-                case 'upcoming':
-                    endpoint = `/football/matches/upcoming?page=${CONFIG.state.currentPage}`;
-                    break;
-                case 'inplay':
-                    endpoint = '/football/matches/inplay';
-                    break;
-                case 'ended':
-                    endpoint = `/football/matches/ended?page=${CONFIG.state.currentPage}`;
-                    break;
-            }
-
-            console.log('🌐 API 요청:', CONFIG.API_BASE + endpoint);
-            const response = await CONFIG.api.get(endpoint);
-            console.log('📦 API 응답:', response.data);
-            
-            const data = response.data.data;
-            
-            if (!data) {
-                console.error('❌ API 응답에 data 필드가 없음:', response.data);
-                container.innerHTML = '<div class="error">API 응답 형식이 올바르지 않습니다.</div>';
-                return;
-            }
-            
-            if (!data.results || data.results.length === 0) {
-                container.innerHTML = Utils.createEmptyStateHTML(`현재 ${this.getMatchTypeText(CONFIG.state.currentMatchType)} 경기가 없습니다.`);
-                document.getElementById('matchesPagination').style.display = 'none';
-                return;
-            }
-
-            console.log(`✅ ${data.results.length}개의 경기를 찾았습니다.`);
-
-            // 경기 카드들 렌더링
-            container.innerHTML = data.results.map(match => this.createMatchCard(match)).join('');
-            
-            // 페이지네이션 업데이트 (upcoming, ended만)
-            if (CONFIG.state.currentMatchType !== 'inplay' && data.pager) {
-                this.updatePagination(data.pager);
-            } else {
-                document.getElementById('matchesPagination').style.display = 'none';
-            }
-
-        } catch (error) {
-            console.error('❌ 축구 경기 로드 실패:', error);
-            console.error('에러 상세:', error.response?.data || error.message);
-            
-            let errorMessage = '축구 경기 데이터 로드에 실패했습니다.';
-            if (error.response?.status === 404) {
-                errorMessage = 'BetsAPI 서비스를 찾을 수 없습니다. 백엔드 서버를 확인해주세요.';
-            } else if (error.response?.status === 500) {
-                errorMessage = 'BetsAPI 토큰 또는 서버 오류입니다.';
-            }
-            
-            container.innerHTML = `<div class="error">${errorMessage}<br><small>콘솔을 확인하여 자세한 오류를 확인하세요.</small></div>`;
-        }
-    },
-
     // 경기 상세 정보 보기
     async viewMatchDetails(eventId) {
         try {
@@ -307,4 +377,3 @@ const FootballSchedule = {
         }
     }
 };
-
