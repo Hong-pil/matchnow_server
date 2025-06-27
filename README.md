@@ -215,46 +215,60 @@ ls -la node_modules/@nestjs/config
 
 
 # Ubuntu Desktop PC 에서 시작하기
-
-# Docker 와 Docker Compose 설치
-# 1단계: Docker Engine 설치 
-# 업데이트 및 필수 패키지 설치:
-$ sudo apt update
-$ sudo apt install apt-transport-https ca-certificates curl software-properties-common
-# Docker의 GPG 키 추가: 
-$ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-# Docker 저장소 추가: 
-$ echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-# apt 패키지 업데이트 및 Docker 설치: 
-$ sudo apt update
-$ sudo apt install docker-ce docker-ce-cli containerd.io
-# Docker 실행 권한 확인 및 실행: 
-$ sudo systemctl enable docker
-$ sudo systemctl start docker
-$ sudo systemctl status docker
-# 2단계: Docker Compose 설치 
-# Docker 공식 저장소를 이용한 설치:
-# Docker Compose 설치: 
-$ sudo apt update
-$ sudo apt install docker-compose-plugin
-# 설치 확인:
-$ docker compose version
-
-
-# Docker 실행
-# 이전 컨테이너/이미지 정리 (선택사항)
-docker system prune -a -f
-# 🔥 Ubuntu에서는 docker-compose 대신 docker compose 사용!
-docker compose down -v
-# 서비스 시작
-docker compose up -d
-# 빌드가 필요한 경우
-docker compose up -d --build
-# 상태 확인
-docker compose ps
-docker compose logs -f
-# 리소스 사용량 확인
-docker stats
+  # Docker 와 Docker Compose 설치
+    # Ubuntu에서는 docker-compose 대신 docker compose 사용
+    # 1. Docker 설치 
+      # 업데이트 및 필수 패키지 설치:
+        $ sudo apt update
+        $ sudo apt install apt-transport-https ca-certificates curl software-properties-common
+      # Docker의 GPG 키 추가: 
+        $ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+      # Docker 저장소 추가: 
+        $ echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+      # apt 패키지 업데이트 및 Docker 설치: 
+        $ sudo apt update
+        $ sudo apt install docker-ce docker-ce-cli containerd.io
+      # Docker 실행 권한 확인 및 실행: 
+        $ sudo systemctl enable docker
+        $ sudo systemctl start docker
+        $ sudo systemctl status docker
+      # 2단계: Docker Compose 설치
+        $ sudo apt update
+        $ sudo apt install docker-compose-plugin
+      # 설치 확인:
+        $ docker compose version
+    # 2. Docker 명령어 모음
+      # Docker 실행
+        # 이전 컨테이너/이미지 정리 (주의!)
+        $ docker system prune -a -f
+        $ docker compose down -v
+      # 서비스 시작
+        $ docker compose up -d
+      # 빌드가 필요한 경우
+        $ docker compose up -d --build
+      # 상태 확인
+        $ docker compose ps
+        $ docker compose logs -f
+      # 리소스 사용량 확인
+        $ docker stats
+  # MongoDB 4.4 설치 (CPU AVX 미지원 필수)
+    # Ubuntu 22.04는 기본적으로 libssl3을 사용하는데, MongoDB 4.4는 구버전인 libssl1.1을 요구한다. 그래서 libssl1.1 설치를 해야 한다.
+      # 1. 기존 MongoDB 저장소 제거 (이미 추가한 경우)
+        $ sudo rm -f /etc/apt/sources.list.d/mongodb-org-*.list
+      # 2. MongoDB 4.4 GPG 키 추가 (경고 무시해도 됨)
+        $ wget -qO - https://www.mongodb.org/static/pgp/server-4.4.asc | sudo apt-key add
+      # 3. Ubuntu 20.04 저장소 사용 (jammy 대신 focal)
+        $ echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/4.4 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.4.list
+        $ sudo apt update
+      # 4. 사용 가능한 패키지 확인
+        $ apt-cache search mongodb-org
+      # 5. libssl1.1 설치
+        $ wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb
+        $ sudo dpkg -i libssl1.1_1.1.1f-1ubuntu2_amd64.deb
+      # 6. MongoDB 4.4 설치
+        $ sudo apt install -y mongodb-org
+      # 7. 설치 확인
+        $ mongod --version
 
 # 접속 테스트
 # 헬스체크
