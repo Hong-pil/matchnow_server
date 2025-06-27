@@ -91,26 +91,100 @@ ls -la node_modules/@nestjs/config
 # 2. MongoDB 실행
   $ brew services start mongodb/brew/mongodb-community@4.4
     # 설치 안 되어 있다면? 설치하기
-      # 1. mongodb-community@4.4 설치
-        $ brew update
-        $ arch -arm64 brew install mongodb-community@4.4 (AVX 미지원 CPU용)
+      # 1. MongoDB Community Edition 설치
+        # 1. Homebrew 최신 업데이트
+          $ brew update
+        # 2. MongoDB Community Edition 4.4 설치 (AVX 미지원 CPU용)
           # (Ubuntu Desktop PC의 CPU가 AVX 미지원 모델이기 때문에 맥북에서도 동일하게 설치)
-      # 2. PATH에 MongoDB 추가
-        $ echo 'export PATH="/opt/homebrew/opt/mongodb-community@4.4/bin:$PATH"' >> ~/.zshrc
-        # 터미널 재시작 또는 설정 다시 로드
-          $ source ~/.zshrc 또는 터미널을 완전히 종료했다가 다시 열어도 됨
-      # 3. 설치 확인
-        $ mongod --version
-        $ mongo --version
-        4. MongoDB 서비스 시작
-      # 4. MongoDB 서비스 시작 (백그라운드에서 자동 실행)
-        $ brew services start mongodb/brew/mongodb-community@4.4
-        # 또는 일회성으로 실행
-        $ mongod --config /opt/homebrew/etc/mongod.conf
-      # 5. 서비스 상태 확인
-        $ brew services list | grep mongodb
-      # 6. MongoDB 셸 접속
-        $ mongo
+          # 처음엔 MongoDB 7.0 버전으로 시도했으나 현재 Ubuntu Desktop PC에서 사용 중인 CPU가 AVX 지원하지 않아서 4. 버전으로 설치함. (5. 버전부터 CPU가 AVX 지원해야 함)
+            $ brew install mongodb-community@4.4
+        # 3. MongoDB 4.4 버전 설치 확인
+          $ mongod --version
+          $ mongo --version  # 4.4에서는 mongo 명령어 사용
+        # 4. MongoDB 서비스 시작 및 관리
+          # MongoDB 4.4 서비스 시작 (백그라운드 실행)
+          $ brew services start mongodb/brew/mongodb-community@4.4
+          # 서비스 상태 확인
+          $ brew services list | grep mongodb
+          # 서비스 중지
+          $ brew services stop mongodb/brew/mongodb-community@4.4
+          # 서비스 재시작
+          $ brew services restart mongodb/brew/mongodb-community@4.4
+          # 수동으로 MongoDB 실행 (개발용)
+          $ mongod --config /usr/local/etc/mongod.conf
+        # 5. MongoDB 설정 파일 수정
+          # 설정 파일 위치 (Apple Silicon Mac의 경우)
+            $ ls -la /opt/homebrew/etc/mongod.conf
+          # 설정 파일 편집
+            $ sudo nano /opt/homebrew/etc/mongod.conf
+              # mongod.conf 설정 내용
+                systemLog:
+                  destination: file
+                  path: /opt/homebrew/var/log/mongodb/mongo.log  # Apple Silicon
+                  logAppend: true
+                storage:
+                  dbPath: /opt/homebrew/var/mongodb  # Apple Silicon
+                net:
+                  port: 27017
+                  bindIp: 127.0.0.1,localhost
+                security:
+                  authorization: enabled
+        # 6. MongoDB 사용자 및 데이터베이스 설정
+          # MongoDB Shell 접속 (4.4에서는 mongo 명령어 사용)
+            $ mongo
+          # 특정 데이터베이스로 직접 접속
+            $ mongo mongodb://localhost:27017/matchnow_dev
+          # 관리자 사용자 생성 (admin 데이터베이스로 전환)
+            > use admin
+              // 관리자 사용자 생성
+              db.createUser({
+                user: "admin",
+                pwd: "matchnow0618!!!",
+                roles: [
+                  { role: "userAdminAnyDatabase", db: "admin" },
+                  { role: "readWriteAnyDatabase", db: "admin" },
+                  { role: "dbAdminAnyDatabase", db: "admin" }
+                ]
+              })
+          # 생성 확인
+            > db.getUsers()
+          # 프로젝트용 데이터베이스 및 사용자 생성
+            # matchnow_dev 데이터베이스로 전환
+              > use matchnow_dev
+          # 프로젝트용 사용자 생성
+            db.createUser({
+              user: "matchnow_user",
+              pwd: "matchnow0618!!!",
+              roles: [
+                { role: "readWrite", db: "matchnow_dev" }
+              ]
+            })
+          # 생성 확인
+            > db.getUsers()
+          # 데이터베이스 확인
+            > show dbs
+          # 7. 연결 테스트 (4.4 버전)
+              $ mongo
+            # 특정 호스트/포트로 연결
+              $ mongo --host localhost --port 27017
+            # 연결 상태 확인
+              $ mongo --eval "db.runCommand({connectionStatus: 1})"
+            # 인증을 통한 연결 테스트
+              # 관리자 계정으로 연결 (readWriteAnyDatabase 권한으로 모든 데이터베이스에 접근 가능)
+                $ mongo 'mongodb://admin:matchnow0618!!!@localhost:27017/admin'
+              # 프로젝트 데이터베이스 연결 (해당 데이터베이스에서만 readWrite 권한을 가짐)
+                $ mongo 'mongodb://matchnow_user:matchnow0618!!!@localhost:27017/matchnow_dev'
+          # 8. 유용한 명령어 모음
+            # MongoDB 4.4 상태 확인
+              $ brew services info mongodb/brew/mongodb-community@4.4
+            # MongoDB 4.4 재시작
+              $ brew services restart mongodb/brew/mongodb-community@4.4
+            # MongoDB 로그 실시간 확인
+              $ tail -f /usr/local/var/log/mongodb/mongo.log
+            # MongoDB 데이터 디렉토리 크기 확인
+              $ du -sh /usr/local/var/mongodb
+            # MongoDB 프로세스 확인
+              $ pgrep mongod
 # 3. 프로젝트 실행
   # 서비스 시작
   $ docker-compose up -d

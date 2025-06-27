@@ -18,7 +18,31 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
+    
+    "// MongoDB 관련 스크립트": "// ========================",
     "db:seed": "node scripts/seed.js",
+    "db:connect": "mongo mongodb://admin:matchnow0618!!!@localhost:27017/matchnow_dev?authSource=admin",
+    "db:connect:admin": "mongo mongodb://admin:matchnow0618!!!@localhost:27017/admin",
+    "db:start": "brew services start mongodb/brew/mongodb-community@4.4",
+    "db:stop": "brew services stop mongodb/brew/mongodb-community@4.4",
+    "db:restart": "brew services restart mongodb/brew/mongodb-community@4.4",
+    "db:status": "brew services list | grep mongodb",
+    "db:logs": "tail -f /usr/local/var/log/mongodb/mongo.log",
+    
+    "// 개발 워크플로우": "// ========================",
+    "dev:setup": "npm run db:start && sleep 3 && npm run db:seed",
+    "dev:start": "npm run db:start && npm run start:dev",
+    "dev:reset": "npm run db:stop && npm run db:start && sleep 3 && npm run db:seed",
+    
+    "// Docker 관련 스크립트": "// ========================",
+    "docker:build": "docker-compose build",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f",
+    "docker:logs:app": "docker-compose logs -f nestjs-app",
+    "docker:clean": "docker-compose down -v && docker system prune -f",
+    
+    "// PM2 관련 스크립트": "// ========================",
     "pm2:start": "pm2 start pm2.yml --env development",
     "pm2:start:prod": "pm2 start pm2.yml --env production",
     "pm2:start:local": "pm2 start pm2.yml --env local",
@@ -29,6 +53,8 @@
     "pm2:monit": "pm2 monit",
     "pm2:status": "pm2 status",
     "pm2:reload": "pm2 reload match-now-api",
+    
+    "// 배포 관련 스크립트": "// ========================",
     "deploy:local": "npm run build && npm run pm2:start:local",
     "deploy:dev": "npm run build && npm run pm2:start",
     "deploy:prod": "npm run build && npm run pm2:start:prod"

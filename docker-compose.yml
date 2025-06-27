@@ -1,6 +1,6 @@
 services:
   # ===================
-  # NestJS 애플리케이션
+  # NestJS 애플리케이션 (로컬 MongoDB 연결)
   # ===================
   nestjs-app:
     build:
@@ -17,42 +17,18 @@ services:
     environment:
       - NODE_ENV=${NODE_ENV:-development}
       - PORT=4011
-      - MONGODB_URI=mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongodb:27017/${MONGO_DATABASE}?authSource=admin
+      # 로컬 MongoDB 연결 (host.docker.internal 사용)
+      - MONGODB_URI=mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@host.docker.internal:27017/${MONGO_DATABASE}?authSource=admin
       - JWT_SECRET=${JWT_SECRET}
-    depends_on:
-      mongodb:
-        condition: service_healthy
+    # MongoDB 의존성 제거 (로컬 MongoDB 사용)
+    # depends_on:
+    #   mongodb:
+    #     condition: service_healthy
     networks:
       - matchnow-network
-
-  # ===================
-  # MongoDB 데이터베이스
-    # 처음엔 MongoDB 7.0 버전으로 시도했으나 현재 Ubuntu Desktop PC에서 사용 중인 CPU가 AVX 지원하지 않아서 4. 버전으로 설치함. (5. 버전부터 CPU가 AVX 지원해야 함)
-  # ===================
-  mongodb:
-    image: mongo:4.4
-    container_name: matchnow-mongodb
-    restart: unless-stopped
-    # 포트 노출하지 않음 (내부 통신만)
-    # ports:
-    #   - "27017:27017"  # 주석 처리
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
-      MONGO_INITDB_DATABASE: ${MONGO_DATABASE}
-    command: >
-      mongod
-      --auth
-      --bind_ip_all
-      --nojournal
-    networks:
-      - matchnow-network
-    healthcheck:
-      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')", "--quiet"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 60s
+    # 호스트 네트워크 추가 설정
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   # ===================
   # Nginx (80포트 메인 + 4011포트 프록시)
@@ -71,28 +47,54 @@ services:
       - matchnow-network
 
   # ===================
-  # MongoDB 관리 도구 (개발용)
+  # MongoDB (제거됨 - 로컬 설치 사용)
   # ===================
-  mongo-express:
-    image: mongo-express:latest
-    container_name: matchnow-mongo-express
-    restart: unless-stopped
-    ports:
-      - "0.0.0.0:8081:8081"
-    environment:
-      ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_ROOT_USERNAME}
-      ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_ROOT_PASSWORD}
-      ME_CONFIG_MONGODB_URL: mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongodb:27017/
-      ME_CONFIG_BASICAUTH_USERNAME: admin
-      ME_CONFIG_BASICAUTH_PASSWORD: ${MONGO_EXPRESS_PASSWORD}
-    depends_on:
-      mongodb:
-        condition: service_healthy
-    networks:
-      - matchnow-network
-    profiles:
-      - dev-tools
+  # mongodb:
+  #   image: mongo:4.4
+  #   container_name: matchnow-mongodb
+  #   restart: unless-stopped
+  #   environment:
+  #     MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USERNAME}
+  #     MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
+  #     MONGO_INITDB_DATABASE: ${MONGO_DATABASE}
+  #   command: >
+  #     mongod
+  #     --auth
+  #     --bind_ip_all
+  #     --nojournal
+  #   networks:
+  #     - matchnow-network
+  #   healthcheck:
+  #     test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')", "--quiet"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+  #     start_period: 60s
+
+  # ===================
+  # MongoDB 관리 도구 (제거됨 - 로컬 도구 사용)
+  # ===================
+  # mongo-express:
+  #   image: mongo-express:latest
+  #   container_name: matchnow-mongo-express
+  #   restart: unless-stopped
+  #   ports:
+  #     - "0.0.0.0:8081:8081"
+  #   environment:
+  #     ME_CONFIG_MONGODB_ADMINUSERNAME: ${MONGO_ROOT_USERNAME}
+  #     ME_CONFIG_MONGODB_ADMINPASSWORD: ${MONGO_ROOT_PASSWORD}
+  #     ME_CONFIG_MONGODB_URL: mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@mongodb:27017/
+  #     ME_CONFIG_BASICAUTH_USERNAME: admin
+  #     ME_CONFIG_BASICAUTH_PASSWORD: ${MONGO_EXPRESS_PASSWORD}
+  #   depends_on:
+  #     mongodb:
+  #       condition: service_healthy
+  #   networks:
+  #     - matchnow-network
+  #   profiles:
+  #     - dev-tools
 
 networks:
   matchnow-network:
     driver: bridge
+
