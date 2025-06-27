@@ -9,7 +9,6 @@ services:
       target: development
     container_name: matchnow-nestjs
     restart: unless-stopped
-    network_mode: "host"  # 호스트 네트워크 직접 사용
     ports:
       - "4011:4011"
     volumes:
