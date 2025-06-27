@@ -10,15 +10,26 @@ services:
     container_name: matchnow-nestjs
     restart: unless-stopped
     network_mode: "host"  # 호스트 네트워크 직접 사용
+    ports:
+      - "4011:4011"
     volumes:
       - .:/app
       - /app/node_modules
     environment:
       - NODE_ENV=${NODE_ENV:-development}
       - PORT=4011
-      # localhost로 직접 연결
-      - MONGODB_URI=mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@localhost:27017/${MONGO_DATABASE}?authSource=admin
+      # 로컬 MongoDB 연결 (host.docker.internal 사용)
+      - MONGODB_URI=mongodb://${MONGO_ROOT_USERNAME}:${MONGO_ROOT_PASSWORD}@host.docker.internal:27017/${MONGO_DATABASE}?authSource=admin
       - JWT_SECRET=${JWT_SECRET}
+    # MongoDB 의존성 제거 (로컬 MongoDB 사용)
+    # depends_on:
+    #   mongodb:
+    #     condition: service_healthy
+    networks:
+      - matchnow-network
+    # 호스트 네트워크 추가 설정
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
 
   # ===================
   # Nginx (80포트 메인 + 4011포트 프록시)
