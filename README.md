@@ -185,6 +185,19 @@ ls -la node_modules/@nestjs/config
               $ du -sh /usr/local/var/mongodb
             # MongoDB 프로세스 확인
               $ pgrep mongod
+          # 9. MongoDB 데이터 완전 초기화
+            # 1. Docker 서비스 중지
+              $ docker-compose down
+            # 2. 로컬 MongoDB 연결하여 데이터베이스 삭제
+              $ $ mongo 'mongodb://admin:matchnow0618!!!@localhost:27017/admin'
+              > show dbs;
+              > use matchnow_dev;
+              > db.dropDatabase();
+              > show dbs;
+            # 3. Docker 서비스 재시작
+              $ docker-compose up -d
+            # 4. 로그 확인
+              $ docker-compose logs -f nestjs-app
 # 3. 프로젝트 실행
   # 서비스 시작
   $ docker-compose up -d
