@@ -1,4 +1,4 @@
-# docker-compose.yml (맥북/Ubuntu 공통 사용)
+# docker-compose.yml (host 네트워크 사용)
 services:
   nestjs-app:
     build:
@@ -7,8 +7,7 @@ services:
       target: development
     container_name: matchnow-nestjs
     restart: unless-stopped
-    ports:
-      - "4011:4011"
+    # host 네트워크 사용 시 ports 설정 불필요
     volumes:
       - .:/app
       - /app/node_modules
@@ -17,43 +16,16 @@ services:
       - PORT=4011
       - MONGODB_URI=${MONGODB_URI}
       - JWT_SECRET=${JWT_SECRET}
-    networks:
-      - matchnow-network
-    # MongoDB 연결 대기
-    depends_on:
-      - wait-for-mongo
-    
-  # MongoDB 연결 대기 서비스
-  wait-for-mongo:
-    image: busybox
-    command: >
-      sh -c "
-        echo 'MongoDB 연결 대기 중...';
-        until nc -z $${MONGO_HOST:-localhost} $${MONGO_PORT:-27017}; do
-          echo 'MongoDB 연결 대기...';
-          sleep 2;
-        done;
-        echo 'MongoDB 연결 확인됨!';
-      "
-    environment:
-      - MONGO_HOST=${MONGO_HOST:-localhost}
-      - MONGO_PORT=${MONGO_PORT:-27017}
-    networks:
-      - matchnow-network
+    # host 네트워크 사용으로 localhost 직접 접근 가능
+    network_mode: host
 
   nginx:
     image: nginx:alpine
     container_name: matchnow-nginx
     restart: unless-stopped
-    ports:
-      - "80:80"
     volumes:
       - ./docker/nginx/simple.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       - nestjs-app
-    networks:
-      - matchnow-network
-
-networks:
-  matchnow-network:
-    driver: bridge
+    # host 네트워크 사용
+    network_mode: host
