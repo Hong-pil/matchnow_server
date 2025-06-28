@@ -1,22 +1,12 @@
-services:
-  # 맥북 전용 MongoDB 컨테이너
-  mongodb-dev:
-    image: mongo:4.4
-    container_name: matchnow-mongodb-dev
-    restart: unless-stopped
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: matchnow0618!!!
-      MONGO_INITDB_DATABASE: matchnow_dev
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongodb_dev_data:/data/db
-      - mongodb_dev_logs:/var/log/mongodb
-    networks:
-      - matchnow-network
-    command: mongod --auth
+# =======================================================
+# 맥북용 docker-compose.dev.yml (수정된 버전)
+# 실행 명령어: docker compose -f docker-compose.dev.yml up -d --build
+# =======================================================
 
+services:
+  # ===================
+  # NestJS 애플리케이션 (개발용)
+  # ===================
   nestjs-app:
     build:
       context: .
@@ -25,37 +15,37 @@ services:
     container_name: matchnow-nestjs-dev
     restart: unless-stopped
     ports:
-      - "4011:4011"
+      - "4011:4011"  # 표준 포트 사용
     volumes:
       - .:/app
       - /app/node_modules
     environment:
       - NODE_ENV=development
       - PORT=4011
-      # 🔑 맥북 자체 MongoDB 컨테이너 사용
-      - MONGODB_URI=mongodb://admin:matchnow0618!!!@mongodb-dev:27017/matchnow_dev?authSource=admin
-      - JWT_SECRET=${JWT_SECRET}
-    depends_on:
-      - mongodb-dev
+      # 🔑 Ubuntu PC 외부 MongoDB 사용
+      - MONGODB_URI=mongodb://admin:matchnow0618!!!@175.126.95.157:27017/matchnow_dev?authSource=admin
+      - MONGO_ROOT_USERNAME=admin
+      - MONGO_ROOT_PASSWORD=matchnow0618!!!
+      - MONGO_DATABASE=matchnow_dev
+      - JWT_SECRET=your_super_secret_jwt_key_change_this_later
     networks:
       - matchnow-network
 
+  # ===================
+  # Nginx (개발용)
+  # ===================
   nginx:
     image: nginx:alpine
-    container_name: matchnow-nginx
+    container_name: matchnow-nginx-dev
     restart: unless-stopped
     ports:
-      - "80:80"
+      - "80:80"  # 표준 포트 사용
     volumes:
-      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/nginx-dev.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       - nestjs-app
     networks:
       - matchnow-network
-
-volumes:
-  mongodb_dev_data:
-  mongodb_dev_logs:
 
 networks:
   matchnow-network:

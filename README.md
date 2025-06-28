@@ -274,6 +274,21 @@ ls -la node_modules/@nestjs/config
           $ sudo systemctl restart mongod
           $ sudo systemctl status mongod
           $ sudo systemctl stop mongod
+      # !!! 외부접속 허용
+        # 1. sudo nano /etc/mongod.conf
+          # 아래와 같이 설정
+          net:
+            port: 27017
+            #bindIp: 127.0.0.1
+            bindIp: 0.0.0.0  # 모든 IP에서 접속 허용
+        # 2. 외부 포트(27017) 열기 및 내부 방화벽 포트(27017) 허용 (Notion 참고)
+        # 3. MongoDB 재시작
+          $ sudo systemctl restart mongod
+          $ sudo systemctl status mongod
+          # 포트 바인딩 상태 확인
+            $ sudo netstat -tlnp | grep 27017
+        # 4. 맥북 터미널에서 접속 테스트 (맥북에도 MongoDB 4.4 버전 설치되어 있어야 됨)
+          $ mongo 'mongodb://admin:matchnow0618!!!@175.126.95.157:27017/admin'
 
 # 접속 테스트
 # 헬스체크
