@@ -1,4 +1,4 @@
-# docker-compose.yml (Git에 포함 - 모든 환경 공통)
+# docker-compose.yml (맥북/Ubuntu 공통 사용)
 services:
   nestjs-app:
     build:
@@ -15,9 +15,29 @@ services:
     environment:
       - NODE_ENV=${NODE_ENV:-development}
       - PORT=4011
-      # 🔥 환경변수로 동적 처리
       - MONGODB_URI=${MONGODB_URI}
       - JWT_SECRET=${JWT_SECRET}
+    networks:
+      - matchnow-network
+    # MongoDB 연결 대기
+    depends_on:
+      - wait-for-mongo
+    
+  # MongoDB 연결 대기 서비스
+  wait-for-mongo:
+    image: busybox
+    command: >
+      sh -c "
+        echo 'MongoDB 연결 대기 중...';
+        until nc -z $${MONGO_HOST:-localhost} $${MONGO_PORT:-27017}; do
+          echo 'MongoDB 연결 대기...';
+          sleep 2;
+        done;
+        echo 'MongoDB 연결 확인됨!';
+      "
+    environment:
+      - MONGO_HOST=${MONGO_HOST:-localhost}
+      - MONGO_PORT=${MONGO_PORT:-27017}
     networks:
       - matchnow-network
 
@@ -28,7 +48,7 @@ services:
     ports:
       - "80:80"
     volumes:
-      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/simple.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       - nestjs-app
     networks:
