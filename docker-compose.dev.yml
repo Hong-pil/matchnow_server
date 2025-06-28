@@ -1,10 +1,61 @@
 services:
-  nestjs-app:
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+  # 맥북 전용 MongoDB 컨테이너
+  mongodb-dev:
+    image: mongo:4.4
+    container_name: matchnow-mongodb-dev
+    restart: unless-stopped
     environment:
-      # 맥북용 MongoDB 연결
-      - MONGODB_URI=mongodb://admin:matchnow0618!!!@host.docker.internal:27017/matchnow_dev?authSource=admin
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: matchnow0618!!!
+      MONGO_INITDB_DATABASE: matchnow_dev
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_dev_data:/data/db
+      - mongodb_dev_logs:/var/log/mongodb
+    networks:
+      - matchnow-network
+    command: mongod --auth
+
+  nestjs-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: matchnow-nestjs-dev
+    restart: unless-stopped
+    ports:
+      - "4011:4011"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - PORT=4011
+      # 🔑 맥북 자체 MongoDB 컨테이너 사용
+      - MONGODB_URI=mongodb://admin:matchnow0618!!!@mongodb-dev:27017/matchnow_dev?authSource=admin
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      - mongodb-dev
+    networks:
+      - matchnow-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: matchnow-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - nestjs-app
+    networks:
+      - matchnow-network
+
+volumes:
+  mongodb_dev_data:
+  mongodb_dev_logs:
 
 networks:
   matchnow-network:

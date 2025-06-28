@@ -6,36 +6,23 @@ services:
       target: development
     container_name: matchnow-nestjs
     restart: unless-stopped
-    ports:
-      - "4011:4011"
     volumes:
       - .:/app
       - /app/node_modules
     environment:
-      - NODE_ENV=${NODE_ENV:-development}
+      - NODE_ENV=production
       - PORT=4011
-      # 🔑 host.docker.internal 사용
-      - MONGODB_URI=mongodb://admin:matchnow0618!!!@host.docker.internal:27017/matchnow_dev?authSource=admin
+      # 🔑 Ubuntu PC 로컬 MongoDB 사용
+      - MONGODB_URI=mongodb://admin:matchnow0618!!!@localhost:27017/matchnow_dev?authSource=admin
       - JWT_SECRET=${JWT_SECRET}
-    # 🔑 호스트 접근 설정
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
-    networks:
-      - matchnow-network
+    network_mode: "host"
 
   nginx:
     image: nginx:alpine
     container_name: matchnow-nginx
     restart: unless-stopped
-    ports:
-      - "80:80"
     volumes:
       - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       - nestjs-app
-    networks:
-      - matchnow-network
-
-networks:
-  matchnow-network:
-    driver: bridge
+    network_mode: "host"
