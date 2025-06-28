@@ -1,4 +1,4 @@
-# docker-compose.yml (host 네트워크 사용)
+# docker-compose.yml (host 네트워크)
 services:
   nestjs-app:
     build:
@@ -7,7 +7,6 @@ services:
       target: development
     container_name: matchnow-nestjs
     restart: unless-stopped
-    # host 네트워크 사용 시 ports 설정 불필요
     volumes:
       - .:/app
       - /app/node_modules
@@ -16,7 +15,6 @@ services:
       - PORT=4011
       - MONGODB_URI=${MONGODB_URI}
       - JWT_SECRET=${JWT_SECRET}
-    # host 네트워크 사용으로 localhost 직접 접근 가능
     network_mode: host
 
   nginx:
@@ -24,8 +22,7 @@ services:
     container_name: matchnow-nginx
     restart: unless-stopped
     volumes:
-      - ./docker/nginx/host-network.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       - nestjs-app
-    # host 네트워크 사용
     network_mode: host
