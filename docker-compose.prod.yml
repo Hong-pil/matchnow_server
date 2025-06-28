@@ -1,8 +1,4 @@
-# docker-compose.prod.yml (외부 접속 지원 버전)
 services:
-  # ===================
-  # NestJS 애플리케이션 (브리지 네트워크 + extra_hosts)
-  # ===================
   nestjs-app:
     build:
       context: .
@@ -18,25 +14,21 @@ services:
     environment:
       - NODE_ENV=${NODE_ENV:-development}
       - PORT=4011
-      # 🔑 host.docker.internal 사용으로 호스트 MongoDB 접근
+      # 🔑 host.docker.internal 사용
       - MONGODB_URI=mongodb://admin:matchnow0618!!!@host.docker.internal:27017/matchnow_dev?authSource=admin
       - JWT_SECRET=${JWT_SECRET}
-    # 🔑 호스트 접근을 위한 설정
+    # 🔑 호스트 접근 설정
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:
       - matchnow-network
 
-  # ===================
-  # Nginx (외부 접속 지원)
-  # ===================
   nginx:
     image: nginx:alpine
     container_name: matchnow-nginx
     restart: unless-stopped
     ports:
       - "80:80"
-      - "443:443"  # HTTPS 지원
     volumes:
       - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
