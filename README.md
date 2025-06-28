@@ -156,7 +156,8 @@ ls -la node_modules/@nestjs/config
               user: "matchnow_user",
               pwd: "matchnow0618!!!",
               roles: [
-                { role: "readWrite", db: "matchnow_dev" }
+                { role: "readWrite", db: "matchnow_dev" },
+                { role: "dbAdmin", db: "matchnow_dev" }
               ]
             })
           # 생성 확인

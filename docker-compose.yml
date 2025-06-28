@@ -1,45 +1,39 @@
-# services:
-#   # ===================
-#   # NestJS 애플리케이션 (로컬 MongoDB 연결)
-#   # ===================
-#   nestjs-app:
-#     build:
-#       context: .
-#       dockerfile: Dockerfile
-#       target: development
-#     container_name: matchnow-nestjs
-#     restart: unless-stopped
-#     ports:
-#       - "4011:4011"
-#     volumes:
-#       - .:/app
-#       - /app/node_modules
-#     environment:
-#       - NODE_ENV=${NODE_ENV:-development}
-#       - PORT=4011
-#       - MONGO_ROOT_USERNAME=${MONGO_ROOT_USERNAME}
-#       - MONGO_ROOT_PASSWORD=${MONGO_ROOT_PASSWORD}
-#       - MONGO_DATABASE=${MONGO_DATABASE}
-#       - JWT_SECRET=${JWT_SECRET}
-#     networks:
-#       - matchnow-network
+# docker-compose.yml (Git에 포함 - 모든 환경 공통)
+services:
+  nestjs-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: matchnow-nestjs
+    restart: unless-stopped
+    ports:
+      - "4011:4011"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=${NODE_ENV:-development}
+      - PORT=4011
+      # 🔥 환경변수로 동적 처리
+      - MONGODB_URI=${MONGODB_URI}
+      - JWT_SECRET=${JWT_SECRET}
+    networks:
+      - matchnow-network
 
-#   # ===================
-#   # Nginx (80포트 메인 + 4011포트 프록시)
-#   # ===================
-#   nginx:
-#     image: nginx:alpine
-#     container_name: matchnow-nginx
-#     restart: unless-stopped
-#     ports:
-#       - "80:80"
-#     volumes:
-#       - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-#     depends_on:
-#       - nestjs-app
-#     networks:
-#       - matchnow-network
+  nginx:
+    image: nginx:alpine
+    container_name: matchnow-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - nestjs-app
+    networks:
+      - matchnow-network
 
-# networks:
-#   matchnow-network:
-#     driver: bridge
+networks:
+  matchnow-network:
+    driver: bridge
