@@ -24,7 +24,7 @@ services:
     container_name: matchnow-nginx
     restart: unless-stopped
     volumes:
-      - ./docker/nginx/simple.conf:/etc/nginx/nginx.conf:ro
+      - ./docker/nginx/host-network.conf:/etc/nginx/nginx.conf:ro
     depends_on:
       - nestjs-app
     # host 네트워크 사용
