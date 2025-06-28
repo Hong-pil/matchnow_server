@@ -263,12 +263,17 @@ ls -la node_modules/@nestjs/config
       # 4. 사용 가능한 패키지 확인
         $ apt-cache search mongodb-org
       # 5. libssl1.1 설치
-        $ wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb
+        $ sudo wget http://archive.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu2_amd64.deb
         $ sudo dpkg -i libssl1.1_1.1.1f-1ubuntu2_amd64.deb
       # 6. MongoDB 4.4 설치
         $ sudo apt install -y mongodb-org
       # 7. 설치 확인
         $ mongod --version
+      # 8. 명령어
+          $ sudo systemctl start mongod
+          $ sudo systemctl restart mongod
+          $ sudo systemctl status mongod
+          $ sudo systemctl stop mongod
 
 # 접속 테스트
 # 헬스체크
