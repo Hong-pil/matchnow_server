@@ -1,14 +1,36 @@
 services:
+  # ===================
+  # NestJS 애플리케이션 (호스트 네트워크 사용)
+  # ===================
   nestjs-app:
-    # 호스트 네트워크 접근을 위한 extra_hosts 추가
-    extra_hosts:
-      - "host.docker.internal:172.17.0.1"
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: matchnow-nestjs
+    restart: unless-stopped
+    volumes:
+      - .:/app
+      - /app/node_modules
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=${NODE_ENV:-development}
       - PORT=4011
+      # 🔑 호스트 네트워크에서는 localhost 사용 가능
       - MONGODB_URI=mongodb://admin:matchnow0618!!!@localhost:27017/matchnow_dev?authSource=admin
+      - JWT_SECRET=${JWT_SECRET}
+    # 🔑 핵심: 호스트 네트워크 사용으로 네트워크 격리 제거
     network_mode: "host"
 
-networks:
-  matchnow-network:
-    driver: bridge
+  # ===================
+  # Nginx (호스트 네트워크 사용)
+  # ===================
+  nginx:
+    image: nginx:alpine
+    container_name: matchnow-nginx
+    restart: unless-stopped
+    volumes:
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - nestjs-app
+    # 🔑 nginx도 호스트 네트워크 사용
+    network_mode: "host"
