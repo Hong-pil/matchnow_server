@@ -1,0 +1,9 @@
+services:
+  nestjs-app:
+    environment:
+      # Ubuntu용 MongoDB 연결
+      - MONGODB_URI=mongodb://admin:matchnow0618!!!@172.17.0.1:27017/matchnow_dev?authSource=admin
+
+networks:
+  matchnow-network:
+    driver: bridge
