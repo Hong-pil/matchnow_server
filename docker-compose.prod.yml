@@ -4,10 +4,10 @@ services:
     extra_hosts:
       - "host.docker.internal:172.17.0.1"
     environment:
-      # Ubuntu에서 Docker 브리지 IP 사용
-      - MONGODB_URI=mongodb://admin:matchnow0618!!!@172.17.0.1:27017/matchnow_dev?authSource=admin
-      # 또는 host.docker.internal 사용 (일부 환경에서만 작동)
-      # - MONGODB_URI=mongodb://admin:matchnow0618!!!@host.docker.internal:27017/matchnow_dev?authSource=admin
+      - NODE_ENV=development
+      - PORT=4011
+      - MONGODB_URI=mongodb://admin:matchnow0618!!!@localhost:27017/matchnow_dev?authSource=admin
+    network_mode: "host"
 
 networks:
   matchnow-network:
