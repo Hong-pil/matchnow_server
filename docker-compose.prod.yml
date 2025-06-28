@@ -1,8 +1,13 @@
 services:
   nestjs-app:
+    # 호스트 네트워크 접근을 위한 extra_hosts 추가
+    extra_hosts:
+      - "host.docker.internal:172.17.0.1"
     environment:
-      # Ubuntu용 MongoDB 연결
+      # Ubuntu에서 Docker 브리지 IP 사용
       - MONGODB_URI=mongodb://admin:matchnow0618!!!@172.17.0.1:27017/matchnow_dev?authSource=admin
+      # 또는 host.docker.internal 사용 (일부 환경에서만 작동)
+      # - MONGODB_URI=mongodb://admin:matchnow0618!!!@host.docker.internal:27017/matchnow_dev?authSource=admin
 
 networks:
   matchnow-network:
