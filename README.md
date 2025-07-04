@@ -343,6 +343,121 @@ http://175.126.95.157/api
 
 ```
 
+
+
+
+
+
+
+```bash
+
+1. MySQL 설치 가이드
+
+
+📱 macOS에서 MySQL 설치
+# 1. Homebrew로 MySQL 설치
+$ arch -arm64 brew install mysql
+
+# 2. MySQL 서비스 시작
+$ brew services start mysql
+
+# 3. MySQL 보안 설정 (루트 비밀번호 설정)
+$ mysql_secure_installation
+
+# 설정 과정에서:
+# - 비밀번호 강도 0 = LOW, 1 = MEDIUM and 2 = STRONG: 중에서 '2(STRONG)' 선택
+# - 루트 비밀번호 설정: matchNow0618!!!
+# - 익명 사용자 제거: Y
+# - 원격 루트 로그인 비활성화: N (개발환경이므로)
+# - 테스트 데이터베이스 제거: Y
+# - 권한 테이블 재로드: Y
+
+# 4. MySQL 접속 확인
+$ mysql -u root -p
+# 비밀번호: matchNow0618!!!
+
+# 5. 데이터베이스 생성
+> CREATE DATABASE matchnow_dev CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+# 6. 전용 사용자 생성
+> CREATE USER 'matchnow_user'@'%' IDENTIFIED BY 'matchNow0618!!!';
+> GRANT ALL PRIVILEGES ON matchnow_dev.* TO 'matchnow_user'@'%';
+> FLUSH PRIVILEGES;
+
+# 7. 연결 테스트
+$ mysql -u matchnow_user -p matchnow_dev
+
+
+
+
+
+
+
+
+
+🐧 Ubuntu Desktop PC에서 MySQL 설치
+# 1. 패키지 목록 업데이트
+sudo apt update
+
+# 2. MySQL 서버 설치
+sudo apt install mysql-server
+
+# 3. 비밀번호 설정
+$ sudo mysql -u root -p
+초기 비밀번호 없음. 엔터
+> alter user 'root'@'localhost' identified with mysql_native_password by 'matchNow0618!!!';
+> FLUSH PRIVILEGES;
+> exit
+
+# 3. MySQL 보안 설정
+sudo mysql_secure_installation
+
+# 설정 과정에서:
+# - 루트 비밀번호 설정: 위에서 설정함
+# - 익명 사용자 제거: Y
+# - 원격 루트 로그인 비활성화: N
+# - 테스트 데이터베이스 제거: Y
+# - 권한 테이블 재로드: Y
+
+# 4. MySQL 서비스 확인
+$ sudo systemctl status mysql
+$ sudo systemctl enable mysql  # 부팅 시 자동 시작
+
+# 5. MySQL 접속
+$ sudo mysql -u root -p
+
+# 6. 외부 접속 허용 설정
+$ sudo nano /etc/mysql/mysql.conf.d/mysqld.cnf
+# bind-address = 127.0.0.1 을 다음으로 변경:
+# bind-address = 0.0.0.0
+
+# 7. MySQL 재시작
+sudo systemctl restart mysql
+
+# 8. 데이터베이스 및 사용자 생성
+$ sudo mysql -u root -p
+> CREATE DATABASE matchnow_dev CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+> CREATE USER 'matchnow_user'@'%' IDENTIFIED BY 'matchNow0618!!!';
+> GRANT ALL PRIVILEGES ON matchnow_dev.* TO 'matchnow_user'@'%';
+> FLUSH PRIVILEGES;
+
+# 9. 방화벽 포트 열기
+$ sudo ufw allow 3306
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
 ## 📋 시스템 요구사항
 
 - **Docker Desktop** (유일한 요구사항!)
