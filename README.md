@@ -17,6 +17,29 @@ nginx.conf
 simple.conf
 
 # 3. Docker로 실행
+
+# 맥북에서 실행
+# 기존 컨테이너 정리
+docker-compose -f docker-compose.mac.yml down -v
+# 재실행
+docker-compose -f docker-compose.mac.yml up -d --build
+# 상태 확인
+docker-compose -f docker-compose.mac.yml ps
+# 로그 확인
+docker-compose -f docker-compose.mac.yml logs -f
+
+# 우분투에서 실행
+# 기존 컨테이너 정리
+docker compose down --remove-orphans
+# 재실행
+docker compose up -d --build
+# 상태 확인
+docker compose ps
+# 로그 확인
+docker compose logs -f
+
+
+
 # 서비스 중지
 $ docker-compose down
 # 완전 정리 (볼륨 포함)
@@ -214,6 +237,23 @@ ls -la node_modules/@nestjs/config
 
 
 
+
+
+
+# Ubuntu Desktop PC 빠른 시작 (재부팅 후 시작하기)
+# MongoDB 시작
+  $ sudo systemctl status mongod
+  $ sudo systemctl start mongod
+# Docker Compose로 프로젝트 시작
+  # 이전 컨테이너/이미지 정리 (주의!)
+    $ docker compose down -v
+  # 서비스 시작
+    $ docker compose up -d --build
+  # 상태 확인
+    $ docker compose ps
+    $ docker compose logs -f
+  # 리소스 사용량 확인
+    $ docker stats
 
 # Ubuntu Desktop PC 에서 시작하기
   # Docker 와 Docker Compose 설치
