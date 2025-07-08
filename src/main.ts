@@ -16,7 +16,7 @@ async function bootstrap() {
 
   // CORS 설정 (웹사이트에서 API 접근 허용)
   app.enableCors({
-    origin: ['http://localhost', 'http://localhost:3000', 'http://localhost:80'],
+    origin: ['http://localhost', 'http://localhost:3000', 'http://localhost:80', 'http://175.126.95.157'],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     credentials: true,
   });
@@ -50,7 +50,9 @@ async function bootstrap() {
           health: '/health',
           api: '/api',
           docs: '/api',
-          admin: '/admin'  // 관리자 웹사이트 링크 추가
+          admin: '/admin/',  // 관리자 웹사이트 메인
+          adminLogin: '/admin/login.html',  // 관리자 로그인
+          adminRegister: '/admin/register.html',  // 관리자 회원가입
         }
       });
     } else {
@@ -74,6 +76,7 @@ async function bootstrap() {
   await app.listen(port, '0.0.0.0');
 
   console.log(`Application is running on: ${await app.getUrl()}`);
-  console.log(`Admin panel available at: ${await app.getUrl()}/admin`);
+  console.log(`Admin panel available at: ${await app.getUrl()}/admin/`);
+  console.log(`Admin login at: ${await app.getUrl()}/admin/login.html`);
 }
 void bootstrap();

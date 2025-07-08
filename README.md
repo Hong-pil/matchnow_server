@@ -426,23 +426,31 @@ $ sudo systemctl enable mysql  # 부팅 시 자동 시작
 # 5. MySQL 접속
 $ sudo mysql -u root -p
 
-# 6. 외부 접속 허용 설정
-$ sudo nano /etc/mysql/mysql.conf.d/mysqld.cnf
-# bind-address = 127.0.0.1 을 다음으로 변경:
-# bind-address = 0.0.0.0
-
-# 7. MySQL 재시작
+# 6. MySQL 재시작
 sudo systemctl restart mysql
 
-# 8. 데이터베이스 및 사용자 생성
+# 7. 데이터베이스 및 사용자 생성
 $ sudo mysql -u root -p
 > CREATE DATABASE matchnow_dev CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 > CREATE USER 'matchnow_user'@'%' IDENTIFIED BY 'matchNow0618!!!';
 > GRANT ALL PRIVILEGES ON matchnow_dev.* TO 'matchnow_user'@'%';
 > FLUSH PRIVILEGES;
 
-# 9. 방화벽 포트 열기
-$ sudo ufw allow 3306
+# !!! 외부접속 허용
+  # 1. 외부 접속 허용 설정
+      $ sudo nano /etc/mysql/mysql.conf.d/mysqld.cnf
+      # bind-address = 127.0.0.1 을 다음으로 변경:
+      bind-address = 0.0.0.0   # 모든 IP에서 접속 허용
+  # 2. 내부 방화벽 포트 열기
+      $ sudo ufw allow 3306
+  # 3. 외부 포트(27017) 열기 및 내부 방화벽 포트(27017) 허용 (Notion 참고)
+  # 4. MySQL 재시작
+    $ sudo systemctl restart mysql
+    # 포트 바인딩 상태 확인
+      $ sudo netstat -tlnp | grep 3306
+  # 4. 맥북 터미널에서 접속 테스트 (맥북에도 MySQL 설치되어 있어야 됨)
+    $ mysql -h 175.126.95.157 -P 3306 -u matchnow_user -p
+      # 비밀번호: matchNow0618!!!
 
 ```
 

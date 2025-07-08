@@ -3,13 +3,16 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TerminusModule } from '@nestjs/terminus';
 import { ClsModule } from 'nestjs-cls';
 import { MongooseModule } from '@nestjs/mongoose';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 
 import { ClsStoreKey } from '@/common/constants/cls.constant';
+import { getTypeOrmConfig } from '@/config/database.config';
 
 import { AppController } from './app.controller';
 import { AppHealthIndicator } from './app.health';
+import { AppInitService } from './app.init.service';
 import { UsersModule } from './modules/users/users.module';
 import { SportsCategoriesModule } from './modules/sports-categories/sports-categories.module';
 import { LeagueSeasonsModule } from './modules/league-seasons/league-seasons.module';
@@ -19,6 +22,7 @@ import { PlayersModule } from './modules/players/players.module';
 import { TeamsModule } from './modules/teams/teams.module';
 import { GamesModule } from './modules/games/games.module';
 import { BetsApiModule } from './modules/betsapi/betsapi.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
@@ -44,6 +48,8 @@ import { BetsApiModule } from './modules/betsapi/betsapi.module';
         },
       },
     }),
+    
+    // MongoDB 연결 (기존)
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => {
@@ -62,6 +68,14 @@ import { BetsApiModule } from './modules/betsapi/betsapi.module';
       },
       inject: [ConfigService],
     }),
+    
+    // MySQL 연결 (신규)
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: getTypeOrmConfig,
+    }),
+    
     UsersModule,
     SportsCategoriesModule,
     LeagueSeasonsModule,
@@ -71,8 +85,9 @@ import { BetsApiModule } from './modules/betsapi/betsapi.module';
     TeamsModule,
     GamesModule,
     BetsApiModule,
+    AuthModule,
   ],
   controllers: [AppController],
-  providers: [AppHealthIndicator],
+  providers: [AppHealthIndicator, AppInitService],
 })
 export class AppModule {}
