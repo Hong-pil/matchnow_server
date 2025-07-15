@@ -1,9 +1,28 @@
 <!DOCTYPE html>
 <html lang="ko">
+<!DOCTYPE html>
+<html lang="ko">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MatchNow</title>
+    
+    <!-- 🚨 긴급 인증 체크 (가장 먼저 실행) -->
+    <script>
+        (function() {
+            console.log('🚨 긴급 인증 체크 시작');
+            const token = localStorage.getItem('adminToken');
+            console.log('토큰 상태:', token ? 'EXISTS' : 'NOT_FOUND');
+            
+            if (!token) {
+                console.log('❌ 토큰 없음 - 로그인 페이지로 리다이렉트');
+                window.location.href = '/admin/login.html';
+                return;
+            }
+            console.log('✅ 토큰 존재 - 메인 페이지 계속');
+        })();
+    </script>
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/1.6.0/axios.min.js"></script>
     <link rel="stylesheet" href="css/styles.css">
 </head>

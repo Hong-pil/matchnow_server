@@ -19,6 +19,16 @@ const App = {
     async init() {
         console.log('🚀 MatchNow 앱 초기화');
         
+        // 🔐 인증 체크 추가
+        console.log('🔐 인증 상태 체크 시작');
+        const token = localStorage.getItem('adminToken');
+        if (!token) {
+            console.log('❌ 토큰 없음 - 로그인 페이지로 리다이렉트');
+            window.location.href = '/admin/login.html';
+            return;
+        }
+        console.log('✅ 토큰 존재 - 앱 초기화 계속');
+        
         // 탭 이벤트 리스너 등록
         this.attachTabListeners();
         

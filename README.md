@@ -16,7 +16,7 @@ cd matchnow-server
 nginx.conf
 simple.conf
 
-# 3. Docker로 실행
+# 3. 빠른 실행 (부팅 후 실행)
 
 # 맥북에서 실행
 # 기존 컨테이너 정리
@@ -29,14 +29,19 @@ docker-compose -f docker-compose.mac.yml ps
 docker-compose -f docker-compose.mac.yml logs -f
 
 # 우분투에서 실행
-# 기존 컨테이너 정리
-docker compose down --remove-orphans
-# 재실행
-docker compose up -d --build
-# 상태 확인
-docker compose ps
-# 로그 확인
-docker compose logs -f
+## MongoDB 실행
+$ sudo systemctl status mongod
+$ sudo systemctl start mongod
+## 프로젝트 경로로 이동
+$ cd /var/www/html/matchnow_server
+## 기존 컨테이너 정리
+$ sudo docker compose down --remove-orphans
+## 실행
+$ sudo docker compose up -d --build
+## 상태 확인
+$ sudo docker compose ps
+## 로그 확인
+$ sudo docker compose logs -f
 
 
 
