@@ -46,7 +46,12 @@
     "deploy:prod": "npm run build && npm run pm2:start:prod",
     "// 헬스체크 및 모니터링": "// ========================",
     "health:check": "curl -f http://localhost:4011/health || exit 1",
-    "health:api": "curl -f http://localhost:4011/api || exit 1"
+    "health:api": "curl -f http://localhost:4011/api || exit 1",
+    
+    "dev:mac": "cp .env.development .env && pnpm run start:dev",
+    "dev:ubuntu": "cp .env.production .env && pnpm run start:dev",
+    "build:ubuntu": "cp .env.production .env && pnpm run build", 
+    "start:ubuntu": "cp .env.production .env && pnpm run start:prod"
   },
   "dependencies": {
     "@fxts/core": "^1.8.0",
