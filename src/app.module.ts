@@ -1,3 +1,4 @@
+// src/app.module.ts (업데이트)
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TerminusModule } from '@nestjs/terminus';
@@ -22,6 +23,7 @@ import { PlayersModule } from './modules/players/players.module';
 import { TeamsModule } from './modules/teams/teams.module';
 import { GamesModule } from './modules/games/games.module';
 import { BetsApiModule } from './modules/betsapi/betsapi.module';
+import { FootballMatchesModule } from './modules/football-matches/football-matches.module'; // 새로 추가
 import { AuthModule } from './auth/auth.module';
 
 @Module({
@@ -76,6 +78,7 @@ import { AuthModule } from './auth/auth.module';
       useFactory: getTypeOrmConfig,
     }),
     
+    // 기존 모듈들
     UsersModule,
     SportsCategoriesModule,
     LeagueSeasonsModule,
@@ -85,6 +88,7 @@ import { AuthModule } from './auth/auth.module';
     TeamsModule,
     GamesModule,
     BetsApiModule,
+    FootballMatchesModule, // 새로 추가된 축구 경기 관리 모듈
     AuthModule,
   ],
   controllers: [AppController],
