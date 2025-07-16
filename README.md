@@ -13,42 +13,18 @@ NestJS와 MongoDB를 사용한 매칭 서비스 백엔드 API입니다.
 git clone git@github.com:Hong-pil/matchnow-server.git
 cd matchnow-server
 
-
-
 # 2. 환경변수 설정
 .env
-nginx.conf
-simple.conf
-
-
 
 
 # 3. 빠른 실행 (부팅 후 실행)
 
 # 맥북에서 실행
-# MongoDB 실행
-  # 서비스 상태 확인
-  $ brew services list | grep mongodb
-  # 서비스 시작
-  $ brew services start mongodb/brew/mongodb-community@4.4
-## MySQL 실행 (MongoDB와 다르게 자동 실행됨)
-  # 서비스 상태 확인
-  $ brew services list | grep mysql
-  # 서비스 시작
-  $ brew services start mysql
 ## 프로젝트 실행
-#### pnpm 사용
-$ pnpm run start:dev
-#### Docker 사용
-# Docker 앱 실행
-# 기존 컨테이너 정리
-docker-compose -f docker-compose.mac.yml down -v
-# 재실행
-docker-compose -f docker-compose.mac.yml up -d --build
-# 상태 확인
-docker-compose -f docker-compose.mac.yml ps
-# 로그 확인
-docker-compose -f docker-compose.mac.yml logs -f
+$ pnpm install  # 의존성 다시 설치
+$ pnpm run build # TypeScript 빌드 (dist 폴더 다시 생성)
+$ pnpm run start:dev # 실행
+
 
 # 우분투에서 실행
 ## MongoDB 실행
@@ -113,7 +89,6 @@ curl -X POST http://localhost/api/v1/users \
 
 
 # Nginx 설정 수정 후 적용 방법
-VSCode에서 docker/nginx/simple.conf 파일 수정
 # Nginx 재시작
 $ docker-compose stop nginx
 $ docker-compose rm -f nginx
